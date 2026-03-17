@@ -6,211 +6,124 @@
 <title>Ranking de Fundos — CAGR</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f7f6f2;
-    --surface: #ffffff;
-    --border: rgba(0,0,0,0.08);
-    --text: #1a1916;
-    --muted: #7a7870;
-    --green: #1a7a52;  --green-light: #e8f5ee;
-    --blue: #1a4a8a;   --blue-light: #e8eef8;
-    --amber: #a05c00;  --amber-light: #fdf3e3;
-    --red: #b83232;    --red-light: #fdeaea;
+    --bg: #f7f6f2; --surface: #ffffff;
+    --border: rgba(0,0,0,0.08); --text: #1a1916; --muted: #7a7870;
+    --green: #1a7a52; --green-light: #e8f5ee;
+    --blue: #1a4a8a;  --blue-light: #e8eef8;
+    --amber: #a05c00; --amber-light: #fdf3e3;
+    --red: #b83232;   --red-light: #fdeaea;
     --accent: #e05c2a;
   }
   [data-theme=dark] {
-    --bg: #141412;
-    --surface: #1e1d1a;
-    --border: rgba(255,255,255,0.09);
-    --text: #e8e6e0;
-    --muted: #7a7870;
-    --green: #2db87a;  --green-light: #0d2e1e;
-    --blue: #4d8fd4;   --blue-light: #0d1e33;
-    --amber: #d4882a;  --amber-light: #2a1e07;
-    --red: #e05050;    --red-light: #2a0f0f;
+    --bg: #141412; --surface: #1e1d1a;
+    --border: rgba(255,255,255,0.09); --text: #e8e6e0; --muted: #7a7870;
+    --green: #2db87a; --green-light: #0d2e1e;
+    --blue: #4d8fd4;  --blue-light: #0d1e33;
+    --amber: #d4882a; --amber-light: #2a1e07;
+    --red: #e05050;   --red-light: #2a0f0f;
     --accent: #f07040;
   }
-
   body {
     font-family: 'Georgia', serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 2rem 1.5rem 4rem;
-    max-width: 1100px;
-    margin: 0 auto;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding: 2rem 1.5rem 4rem;
+    max-width: 1100px; margin: 0 auto;
     transition: background 0.2s, color 0.2s;
   }
-
-  /* ── Header ─────────────────────────────────────────────────────── */
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap; }
   h1 { font-size: 1.6rem; font-weight: normal; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
   .subtitle { font-size: 0.82rem; color: var(--muted); font-family: 'Courier New', monospace; }
-
-  /* ── Theme toggle ─────────────────────────────────────────────── */
   .theme-btn {
-    font-family: 'Courier New', monospace;
-    font-size: 0.72rem;
-    padding: 5px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-    margin-top: 4px;
+    font-family: 'Courier New', monospace; font-size: 0.72rem;
+    padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); cursor: pointer;
+    transition: all 0.15s; white-space: nowrap; margin-top: 4px;
   }
   .theme-btn:hover { border-color: var(--text); color: var(--text); }
 
-  /* ── Sort nav ─────────────────────────────────────────────────── */
-  nav { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  nav button {
-    font-family: 'Courier New', monospace;
-    font-size: 0.72rem;
-    padding: 5px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  nav button:hover { border-color: var(--text); color: var(--text); }
-  nav button.active { background: var(--text); color: var(--bg); border-color: var(--text); }
-
-  /* ── Status bar ───────────────────────────────────────────────── */
   .status-bar {
-    font-family: 'Courier New', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 14px;
-    margin-bottom: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
+    font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--muted);
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; margin-bottom: 1.5rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
   }
-  .status-dot {
-    display: inline-block;
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--muted);
-    margin-right: 6px;
-    vertical-align: middle;
-  }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
   .status-dot.loading { background: var(--amber); animation: pulse 1.2s infinite; }
   .status-dot.ok      { background: var(--green); }
   .status-dot.error   { background: var(--red); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  /* ── Table ────────────────────────────────────────────────────── */
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    overflow-x: auto;
-  }
-  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 760px; }
 
   thead th {
-    font-family: 'Courier New', monospace;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    padding: 12px 16px;
-    text-align: right;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.15s;
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+    padding: 12px 16px; text-align: right; border-bottom: 1px solid var(--border);
+    background: var(--bg); white-space: nowrap; user-select: none; transition: color 0.15s;
   }
-  thead th:first-child { text-align: left; cursor: default; }
+  thead th:first-child { text-align: left; }
+  thead th.sortable { cursor: pointer; }
   thead th.sortable:hover { color: var(--text); }
-  thead th.sorted { color: var(--accent); }
+  thead th.sorted-desc, thead th.sorted-asc { color: var(--accent); }
 
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.12s;
-  }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--bg); }
+  tbody tr.fund-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  tbody tr.fund-row:hover { background: var(--bg); }
+  tbody tr.detail-row { border-bottom: 1px solid var(--border); }
+  tbody tr.detail-row td { padding: 0; }
+  tbody tr.ibov-row { border-bottom: 1px solid var(--border); }
+  tbody tr.ibov-row td { background: var(--bg); }
+  tbody tr.ibov-row:last-child { border-bottom: none; }
 
-  td {
-    padding: 13px 16px;
-    font-size: 0.84rem;
-    text-align: right;
-    vertical-align: middle;
-  }
+  td { padding: 13px 16px; font-size: 0.84rem; text-align: right; vertical-align: middle; }
   td:first-child { text-align: left; }
 
   .rank {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    font-family: 'Courier New', monospace;
-    font-size: 0.68rem;
-    font-weight: bold;
-    background: var(--border);
-    color: var(--muted);
-    margin-right: 10px;
-    flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    font-family: 'Courier New', monospace; font-size: 0.68rem; font-weight: bold;
+    background: var(--border); color: var(--muted); margin-right: 10px; flex-shrink: 0;
   }
-  .rank.r1 { background: #c9960c; color: #fff; }
-  .rank.r2 { background: #8a8a8a; color: #fff; }
-  .rank.r3 { background: #9c5c2a; color: #fff; }
+  .rank.r1   { background: #c9960c; color: #fff; }
+  .rank.r2   { background: #8a8a8a; color: #fff; }
+  .rank.r3   { background: #9c5c2a; color: #fff; }
+  .rank.ibov { background: var(--blue-light); color: var(--blue); font-size: 0.52rem; width: 30px; letter-spacing: -0.02em; }
 
   .fund-name-cell { display: flex; align-items: center; min-width: 220px; }
   .fund-name  { font-size: 0.84rem; line-height: 1.3; }
   .fund-cnpj  { font-family: 'Courier New', monospace; font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+  .expand-arrow { font-size: 0.55rem; color: var(--muted); margin-left: 5px; display: inline-block; transition: transform 0.2s; }
 
-  .cagr-val      { font-family: 'Courier New', monospace; font-size: 0.88rem; font-weight: bold; }
-  .cagr-val.pos  { color: var(--green); }
-  .cagr-val.neg  { color: var(--red); }
-  .cagr-val.na   { color: var(--muted); font-weight: normal; font-size: 0.78rem; }
-  .tenure        { font-family: 'Courier New', monospace; font-size: 0.78rem; color: var(--muted); }
+  .cagr-val     { font-family: 'Courier New', monospace; font-size: 0.88rem; font-weight: bold; }
+  .cagr-val.pos { color: var(--green); }
+  .cagr-val.neg { color: var(--red); }
+  .cagr-val.na  { color: var(--muted); font-weight: normal; font-size: 0.78rem; }
+  .tenure       { font-family: 'Courier New', monospace; font-size: 0.78rem; color: var(--muted); }
 
-  /* ── Skeleton ─────────────────────────────────────────────────── */
-  .skeleton {
-    display: inline-block;
-    height: 14px;
-    border-radius: 4px;
-    background: var(--border);
-    animation: shimmer 1.4s infinite;
-  }
+  /* ── Detail panel ── */
+  .detail-panel { overflow: hidden; max-height: 0; transition: max-height 0.28s ease; background: var(--bg); }
+  .detail-panel.open { max-height: 260px; }
+  .detail-inner { display: grid; grid-template-columns: 2fr repeat(4,1fr); padding: 0.9rem 1rem 1rem; border-top: 1px solid var(--border); gap: 0; }
+  .ditem { padding-right: 0.8rem; }
+  .dlabel { font-family: 'Courier New', monospace; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 3px; }
+  .dval   { font-size: 0.77rem; color: var(--text); line-height: 1.3; }
+  .dnote  { font-family: 'Courier New', monospace; font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
+  .tag    { display: inline-block; font-family: 'Courier New', monospace; font-size: 0.6rem; padding: 1px 6px; border-radius: 8px; margin-left: 4px; vertical-align: middle; }
+  .tag-rv  { border: 0.5px solid var(--green); color: var(--green); }
+  .tag-tr  { border: 0.5px solid var(--amber); color: var(--amber); }
+  .tag-int { border: 0.5px solid var(--blue);  color: var(--blue); }
+
+  .skeleton { display: inline-block; height: 14px; border-radius: 4px; background: var(--border); animation: shimmer 1.4s infinite; }
   @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-  /* ── Legend ───────────────────────────────────────────────────── */
-  .legend {
-    margin-top: 1.2rem;
-    font-family: 'Courier New', monospace;
-    font-size: 0.68rem;
-    color: var(--muted);
-    line-height: 1.9;
-  }
+  .legend { margin-top: 1.2rem; font-family: 'Courier New', monospace; font-size: 0.68rem; color: var(--muted); line-height: 1.9; }
   .legend span { margin-right: 1.5rem; }
 
-  @media (max-width: 600px) {
+  @media (max-width: 700px) {
     body { padding: 1.2rem 1rem 3rem; }
     h1   { font-size: 1.3rem; }
+    .detail-inner { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -224,14 +137,6 @@
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☽ escuro</button>
 </div>
 
-<nav>
-  <button onclick="sortBy('inception')" id="btn-inception" class="active">CAGR desde início ↓</button>
-  <button onclick="sortBy('cagr12')"   id="btn-cagr12">CAGR 12M ↓</button>
-  <button onclick="sortBy('cagr36')"   id="btn-cagr36">CAGR 36M ↓</button>
-  <button onclick="sortBy('cagr60')"   id="btn-cagr60">CAGR 60M ↓</button>
-  <button onclick="sortBy('tenure')"   id="btn-tenure">Tempo de atividade ↓</button>
-</nav>
-
 <div class="status-bar">
   <div><span class="status-dot loading" id="statusDot"></span><span id="statusText">Carregando dados…</span></div>
   <div id="statusDate"></div>
@@ -242,11 +147,11 @@
     <thead>
       <tr>
         <th>#&nbsp;&nbsp;Fundo</th>
-        <th class="sortable sorted" onclick="sortBy('cagr12')"   id="th-cagr12">CAGR 12M ↕</th>
-        <th class="sortable"        onclick="sortBy('cagr36')"   id="th-cagr36">CAGR 36M ↕</th>
-        <th class="sortable"        onclick="sortBy('cagr60')"   id="th-cagr60">CAGR 60M ↕</th>
-        <th class="sortable"        onclick="sortBy('inception')" id="th-inception">CAGR desde início ↕</th>
-        <th class="sortable"        onclick="sortBy('tenure')"   id="th-tenure">Atividade ↕</th>
+        <th class="sortable" data-key="cagr12"    id="th-cagr12">12M ↕</th>
+        <th class="sortable" data-key="cagr36"    id="th-cagr36">36M ↕</th>
+        <th class="sortable" data-key="cagr60"    id="th-cagr60">60M ↕</th>
+        <th class="sortable" data-key="inception" id="th-inception">Início ↕</th>
+        <th class="sortable" data-key="tenure"    id="th-tenure">Track Record ↕</th>
       </tr>
     </thead>
     <tbody id="fundBody"></tbody>
@@ -256,11 +161,31 @@
 <div class="legend">
   <span>CAGR = taxa de crescimento anual composta</span>
   <span>N/D = dados insuficientes para o período</span>
-  <span>Fonte: CVM / inf_diario_fi</span>
+  <span>Clique num fundo para ver detalhes · clique no cabeçalho para ordenar</span>
+  <span>Fonte: CVM / inf_diario_fi · IBOV: Yahoo Finance</span>
 </div>
 
 <script>
-// ── Theme ────────────────────────────────────────────────────────────────────
+// ── Fund metadata ─────────────────────────────────────────────────────────────
+const FUND_META = {
+  "22.232.927/0001-90": { nome:"Tarpon GT",        tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"BTG",      obs:"" },
+  "17.400.251/0001-66": { nome:"Organon",           tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "18.302.338/0001-63": { nome:"Ártica Long Term",  tipo:"Long Only",    trib:"RV", expo:"Majoritariamente Brasil",  banco:"BTG / C6", obs:"" },
+  "37.495.383/0001-26": { nome:"Genoa Arpa",        tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"C6",       obs:"" },
+  "42.698.666/0001-05": { nome:"Artax Ultra",       tipo:"Long Biased",  trib:"RV", expo:"Internacional",            banco:"Itaú",     obs:"Melhor versão: Itaú Artax Endurance (tributação RV)" },
+  "24.623.392/0001-03": { nome:"Guepardo Long Bias",tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "28.747.685/0001-53": { nome:"Kapitalo Tarkus",   tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"XP",       obs:"" },
+  "10.500.884/0001-05": { nome:"Real Investor",     tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "35.744.790/0001-02": { nome:"Schroder Tech L&S", tipo:"Multimercado", trib:"TR", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "38.954.217/0001-03": { nome:"Pátria Long Biased",tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "32.073.525/0001-43": { nome:"Absolute Pace",     tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "21.689.246/0001-92": { nome:"Arbor",             tipo:"Long Only",    trib:"RV", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "14.438.229/0001-17": { nome:"Charles River",     tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"C6",       obs:"" },
+  "17.397.315/0001-17": { nome:"SPX Falcon",        tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"Itaú",     obs:"" },
+};
+const TRIB_LABEL = { RV:"Renda Variável", TR:"Tabela Regressiva" };
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
 function toggleTheme() {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', dark ? '' : 'dark');
@@ -274,11 +199,14 @@ function toggleTheme() {
   }
 })();
 
-// ── State ────────────────────────────────────────────────────────────────────
-let funds = [];
-let currentSort = 'inception';
+// ── State ─────────────────────────────────────────────────────────────────────
+let funds        = [];
+let ibov         = { cagr12: null, cagr36: null, cagr60: null };
+let currentSort  = 'inception';
+let sortDir      = -1;
+let expandedCnpj = null;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtPct(v) {
   if (v === null || v === undefined || isNaN(v))
     return '<span class="cagr-val na">N/D</span>';
@@ -288,12 +216,10 @@ function fmtPct(v) {
 
 function fmtTenure(d) {
   if (!d) return '<span class="tenure">—</span>';
-  const start = new Date(d + 'T00:00:00');
-  const today = new Date();
+  const start = new Date(d + 'T00:00:00'), today = new Date();
   let years  = today.getFullYear() - start.getFullYear();
   let months = today.getMonth()    - start.getMonth();
-  let days   = today.getDate()     - start.getDate();
-  if (days   < 0) { months--; }
+  if (today.getDate() < start.getDate()) months--;
   if (months < 0) { years--; months += 12; }
   const parts = [];
   if (years  > 0) parts.push(years  + ' ano'  + (years  !== 1 ? 's' : ''));
@@ -301,57 +227,149 @@ function fmtTenure(d) {
   return `<span class="tenure">${parts.join(' e ') || '< 1 mês'}</span>`;
 }
 
-function tenureDays(d) {
-  if (!d) return 0;
-  return (new Date() - new Date(d)) / 86400000;
-}
+function tenureDays(d) { return d ? (new Date() - new Date(d + 'T00:00:00')) / 86400000 : 0; }
 
 function getSortVal(f, key) {
-  const map = { cagr12: f.cagr12, cagr36: f.cagr36, cagr60: f.cagr60, inception: f.cagrInception };
-  if (key === 'tenure') return tenureDays(f.inceptionDate);
-  return map[key] ?? -Infinity;
+  if (key === 'tenure')    return tenureDays(f.inceptionDate);
+  if (key === 'inception') return f.cagrInception ?? -Infinity;
+  return f[key] ?? -Infinity;
 }
 
-// ── Sort ─────────────────────────────────────────────────────────────────────
+// ── Sort ──────────────────────────────────────────────────────────────────────
 function sortBy(key) {
-  currentSort = key;
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  const navBtn = document.getElementById('btn-' + key);
-  if (navBtn) navBtn.classList.add('active');
-  ['cagr12','cagr36','cagr60','inception','tenure'].forEach(k => {
+  if (currentSort === key) { sortDir *= -1; }
+  else { currentSort = key; sortDir = -1; }
+  updateHeaders();
+  render();
+}
+
+const TH_LABELS = { cagr12:'12M', cagr36:'36M', cagr60:'60M', inception:'Início', tenure:'Track Record' };
+
+function updateHeaders() {
+  Object.keys(TH_LABELS).forEach(k => {
     const th = document.getElementById('th-' + k);
-    if (th) th.classList.toggle('sorted', k === key);
+    if (!th) return;
+    th.classList.remove('sorted-asc','sorted-desc');
+    if (k === currentSort) {
+      th.classList.add(sortDir === -1 ? 'sorted-desc' : 'sorted-asc');
+      th.textContent = TH_LABELS[k] + (sortDir === -1 ? ' ↓' : ' ↑');
+    } else {
+      th.textContent = TH_LABELS[k] + ' ↕';
+    }
   });
+}
+
+// ── Toggle detail ─────────────────────────────────────────────────────────────
+function toggleDetail(cnpj) {
+  expandedCnpj = expandedCnpj === cnpj ? null : cnpj;
   render();
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-  const sorted = [...funds].sort((a, b) => getSortVal(b, currentSort) - getSortVal(a, currentSort));
-  document.getElementById('fundBody').innerHTML = sorted.map((f, i) => {
-    const rc = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+  const sorted = [...funds].sort((a, b) =>
+    sortDir * (getSortVal(b, currentSort) - getSortVal(a, currentSort))
+  );
+
+  // Find IBOV rank position for numeric sorts
+  let ibovPos = null;
+  if (['cagr12','cagr36','cagr60'].includes(currentSort)) {
+    const iv = ibov[currentSort];
+    if (iv !== null) {
+      ibovPos = sorted.findIndex(f => sortDir * getSortVal(f, currentSort) < sortDir * iv);
+      if (ibovPos === -1) ibovPos = sorted.length;
+    }
+  }
+
+  let html = '';
+  sorted.forEach((f, i) => {
+    if (ibovPos !== null && i === ibovPos) html += buildIbovRow();
+
+    const meta  = FUND_META[f.cnpjFmt] || {};
+    const nome  = meta.nome || f.name;
+    const rc    = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+    const id    = (f.cnpjFmt || '').replace(/[^a-z0-9]/gi, '');
+    const isExp = expandedCnpj === f.cnpjFmt;
+
     if (f.error) {
-      return `<tr>
+      html += `<tr class="fund-row" onclick="toggleDetail('${f.cnpjFmt}')">
         <td><div class="fund-name-cell">
           <span class="rank ${rc}">${i+1}</span>
-          <div><div class="fund-name">${f.name}</div><div class="fund-cnpj">${f.cnpjFmt}</div></div>
+          <div><div class="fund-name">${nome}</div><div class="fund-cnpj">${f.cnpjFmt}</div></div>
         </div></td>
-        <td colspan="5" style="text-align:center;font-family:'Courier New',monospace;font-size:0.72rem;color:var(--red)">
-          dados não encontrados na CVM
-        </td></tr>`;
+        <td colspan="5" style="text-align:center;font-family:'Courier New',monospace;font-size:0.72rem;color:var(--red)">dados não encontrados na CVM</td>
+      </tr>
+      <tr class="detail-row"><td colspan="6"></td></tr>`;
+      return;
     }
-    return `<tr>
+
+    const tribClass = meta.trib === 'RV' ? 'tag-rv' : 'tag-tr';
+    const intl      = meta.expo && meta.expo.includes('Internacional');
+
+    html += `
+    <tr class="fund-row" onclick="toggleDetail('${f.cnpjFmt}')">
       <td><div class="fund-name-cell">
         <span class="rank ${rc}">${i+1}</span>
-        <div><div class="fund-name">${f.name}</div><div class="fund-cnpj">${f.cnpjFmt}</div></div>
+        <div>
+          <div class="fund-name">${nome} <span class="expand-arrow" style="transform:${isExp?'rotate(180deg)':'none'}">▾</span></div>
+          <div class="fund-cnpj">${f.cnpjFmt}</div>
+        </div>
       </div></td>
       <td>${fmtPct(f.cagr12)}</td>
       <td>${fmtPct(f.cagr36)}</td>
       <td>${fmtPct(f.cagr60)}</td>
       <td>${fmtPct(f.cagrInception)}</td>
       <td>${fmtTenure(f.inceptionDate)}</td>
-    </tr>`;
-  }).join('');
+    </tr>
+    <tr class="detail-row"><td colspan="6">
+      <div class="detail-panel ${isExp?'open':''}" id="detail-${id}">
+        <div class="detail-inner">
+          <div class="ditem">
+            <div class="dlabel">Nome completo</div>
+            <div class="dval" style="font-size:0.72rem">${f.name}</div>
+          </div>
+          <div class="ditem">
+            <div class="dlabel">Tipo</div>
+            <div class="dval">${meta.tipo || '—'}</div>
+          </div>
+          <div class="ditem">
+            <div class="dlabel">Tributação</div>
+            <div class="dval">${TRIB_LABEL[meta.trib] || meta.trib || '—'} <span class="tag ${tribClass}">${meta.trib || '—'}</span></div>
+          </div>
+          <div class="ditem">
+            <div class="dlabel">Exposição</div>
+            <div class="dval">${meta.expo || '—'}</div>
+          </div>
+          <div class="ditem">
+            <div class="dlabel">Melhor banco</div>
+            <div class="dval">${meta.banco || '—'}</div>
+            ${meta.obs ? `<div class="dnote">${meta.obs}</div>` : ''}
+          </div>
+        </div>
+      </div>
+    </td></tr>`;
+  });
+
+  if (ibovPos === null) html += buildIbovRow();
+
+  document.getElementById('fundBody').innerHTML = html;
+}
+
+function buildIbovRow() {
+  return `<tr class="ibov-row">
+    <td><div class="fund-name-cell">
+      <span class="rank ibov">IBOV</span>
+      <div>
+        <div class="fund-name">Ibovespa</div>
+        <div class="fund-cnpj">referência · Yahoo Finance</div>
+      </div>
+    </div></td>
+    <td>${fmtPct(ibov.cagr12)}</td>
+    <td>${fmtPct(ibov.cagr36)}</td>
+    <td>${fmtPct(ibov.cagr60)}</td>
+    <td><span class="cagr-val na">—</span></td>
+    <td><span class="tenure">—</span></td>
+  </tr>`;
 }
 
 // ── Load data.json ────────────────────────────────────────────────────────────
@@ -362,49 +380,54 @@ async function load() {
     const data = await res.json();
     funds = data.funds;
 
-    // Status bar
-    const dot  = document.getElementById('statusDot');
-    const text = document.getElementById('statusText');
+    const dot    = document.getElementById('statusDot');
+    const text   = document.getElementById('statusText');
     const dateEl = document.getElementById('statusDate');
-
     const errors = funds.filter(f => f.error).length;
     dot.className = errors ? 'status-dot error' : 'status-dot ok';
     text.textContent = errors
       ? `${funds.length - errors} de ${funds.length} fundos carregados (${errors} com erro)`
       : `${funds.length} fundos · dados da CVM`;
 
-    // Latest date across all funds
     const dates = funds.filter(f => f.latestDate).map(f => f.latestDate).sort();
     if (dates.length) {
-      const [y, m, d] = dates[dates.length - 1].split('-');
+      const [y,m,d] = dates[dates.length-1].split('-');
       dateEl.textContent = `Última cota: ${d}/${m}/${y}`;
     }
-
-    // Generated timestamp
     if (data.generatedAt) {
       const gen = new Date(data.generatedAt);
       const pad = n => String(n).padStart(2,'0');
       dateEl.textContent += ` · gerado ${pad(gen.getUTCDate())}/${pad(gen.getUTCMonth()+1)} às ${pad(gen.getUTCHours())}:${pad(gen.getUTCMinutes())} UTC`;
     }
 
+    updateHeaders();
     render();
-  } catch (e) {
+    // Load IBOV from data.json (fetched server-side by Python script)
+    if (data.ibov) {
+      ibov = data.ibov;
+      render();
+    }
+
+  } catch(e) {
     document.getElementById('statusDot').className = 'status-dot error';
     document.getElementById('statusText').textContent = 'Erro ao carregar data.json: ' + e.message;
   }
 }
 
-// ── Skeleton while loading ────────────────────────────────────────────────────
-document.getElementById('fundBody').innerHTML = Array.from({length: 12}, (_, i) => `<tr>
-  <td><div class="fund-name-cell">
-    <span class="rank">${i+1}</span>
-    <div><span class="skeleton" style="width:${140+Math.random()*80|0}px;display:block;margin-bottom:5px"></span>
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+document.getElementById('fundBody').innerHTML = Array.from({length:14}, (_,i) => `<tr class="fund-row">
+  <td><div class="fund-name-cell"><span class="rank">${i+1}</span>
+    <div><span class="skeleton" style="width:${130+Math.random()*70|0}px;display:block;margin-bottom:5px"></span>
          <span class="skeleton" style="width:110px;height:10px"></span></div>
   </div></td>
-  ${Array.from({length:5}, () => `<td><span class="skeleton" style="width:56px"></span></td>`).join('')}
+  ${Array.from({length:5},()=>`<td><span class="skeleton" style="width:56px"></span></td>`).join('')}
 </tr>`).join('');
 
-sortBy('inception');
+document.querySelectorAll('thead th[data-key]').forEach(th =>
+  th.addEventListener('click', () => sortBy(th.dataset.key))
+);
+
+updateHeaders();
 load();
 </script>
 </body>
