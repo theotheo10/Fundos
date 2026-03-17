@@ -46,12 +46,7 @@
   }
   .theme-btn:hover { border-color: var(--text); color: var(--text); }
 
-  .status-bar {
-    font-family: 'Courier New', monospace; font-size: 0.7rem; color: var(--muted);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
-    margin-bottom: 1.2rem;
-  }
-  .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
+  .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); vertical-align: middle; }
   .status-dot.loading { background: var(--amber); animation: pulse 1.2s infinite; }
   .status-dot.ok      { background: var(--green); }
   .status-dot.error   { background: var(--red); }
@@ -149,13 +144,16 @@
 
   .legend {
     margin-top: 1.5rem;
-    display: flex; gap: 2rem; flex-wrap: wrap;
+    display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;
     font-family: 'Courier New', monospace; font-size: 0.66rem; color: var(--muted);
     border-top: 1px solid var(--border); padding-top: 1rem;
   }
   .legend-item { display: flex; align-items: baseline; gap: 0.4rem; }
   .legend-key { color: var(--text); font-weight: bold; }
-  .legend-src { margin-left: auto; font-size: 0.62rem; opacity: 0.7; }
+  .legend-status { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
+  .legend-status #statusDate { color: var(--muted); }
+  .legend-status #statusDate::before { content: '·'; margin-right: 0.5rem; }
+  .legend-src { font-size: 0.62rem; opacity: 0.6; }
 
   @media (max-width: 700px) {
     body { padding: 1.2rem 1rem 3rem; }
@@ -174,10 +172,7 @@
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☽ escuro</button>
 </div>
 
-<div class="status-bar">
-  <div><span class="status-dot loading" id="statusDot"></span><span id="statusText">Carregando dados…</span></div>
-  <div id="statusDate"></div>
-</div>
+
 
 <div class="table-wrap">
   <table>
@@ -198,6 +193,10 @@
 <div class="legend">
   <div class="legend-item"><span class="legend-key">CAGR</span><span>taxa de crescimento anual composta</span></div>
   <div class="legend-item"><span class="legend-key">N/D</span><span>dados insuficientes para o período</span></div>
+  <div class="legend-status">
+    <span class="status-dot loading" id="statusDot"></span><span id="statusText">Carregando…</span>
+    <span id="statusDate"></span>
+  </div>
   <div class="legend-item legend-src">CVM · inf_diario_fi · IBOV: Yahoo Finance</div>
 </div>
 
