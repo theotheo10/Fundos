@@ -31,24 +31,22 @@
     max-width: 1100px; margin: 0 auto;
     transition: background 0.2s, color 0.2s;
   }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap; }
-  h1 { font-size: 1.6rem; font-weight: normal; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
-  .subtitle { font-size: 0.82rem; color: var(--muted); font-family: 'Courier New', monospace; }
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+  }
+  h1 { font-size: 1.6rem; font-weight: normal; letter-spacing: -0.02em; }
+  .subtitle { font-size: 0.82rem; color: var(--muted); font-family: 'Courier New', monospace; margin-top: 0.2rem; }
   .theme-btn {
     font-family: 'Courier New', monospace; font-size: 0.72rem;
     padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
     background: transparent; color: var(--muted); cursor: pointer;
-    transition: all 0.15s; white-space: nowrap; margin-top: 4px;
+    transition: all 0.15s; white-space: nowrap;
   }
   .theme-btn:hover { border-color: var(--text); color: var(--text); }
 
-  .status-bar {
-    font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--muted);
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 8px 14px; margin-bottom: 1.5rem;
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
-  }
-  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
+  .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); vertical-align: middle; }
   .status-dot.loading { background: var(--amber); animation: pulse 1.2s infinite; }
   .status-dot.ok      { background: var(--green); }
   .status-dot.error   { background: var(--red); }
@@ -102,28 +100,64 @@
   .tenure       { font-family: 'Courier New', monospace; font-size: 0.78rem; color: var(--muted); }
 
   /* ── Detail panel ── */
-  .detail-panel { overflow: hidden; max-height: 0; transition: max-height 0.28s ease; background: var(--bg); }
-  .detail-panel.open { max-height: 260px; }
-  .detail-inner { display: grid; grid-template-columns: 1fr 1fr repeat(4,1fr); padding: 0.9rem 1rem 1rem; border-top: 1px solid var(--border); gap: 0; }
-  .ditem { padding-right: 0.8rem; }
-  .dlabel { font-family: 'Courier New', monospace; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 3px; }
-  .dval   { font-size: 0.77rem; color: var(--text); line-height: 1.3; }
-  .dnote  { font-family: 'Courier New', monospace; font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
-  .tag    { display: inline-block; font-family: 'Courier New', monospace; font-size: 0.6rem; padding: 1px 6px; border-radius: 8px; margin-left: 4px; vertical-align: middle; }
-  .tag-rv  { border: 0.5px solid var(--green); color: var(--green); }
-  .tag-tr  { border: 0.5px solid var(--amber); color: var(--amber); }
-  .tag-int { border: 0.5px solid var(--blue);  color: var(--blue); }
+  .detail-panel { overflow: hidden; max-height: 0; transition: max-height 0.35s ease; }
+  .detail-panel.open { max-height: 400px; }
+
+  .detail-inner {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    border-top: 2px solid var(--accent);
+  }
+
+  .detail-col {
+    padding: 0.9rem 1.2rem;
+    border-right: 1px solid var(--border);
+  }
+  .detail-col:last-child { border-right: none; }
+
+  .detail-col-header {
+    font-family: 'Courier New', monospace;
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--accent); margin-bottom: 0.8rem; font-weight: bold;
+  }
+
+  .ditem { margin-bottom: 0.6rem; }
+  .ditem:last-child { margin-bottom: 0; }
+  .dlabel { font-family: 'Courier New', monospace; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 2px; }
+  .dval   { font-size: 0.82rem; color: var(--text); line-height: 1.3; }
+  .dnote  { font-family: 'Courier New', monospace; font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
+
+  .tag { display: inline-block; font-family: 'Courier New', monospace; font-size: 0.6rem; padding: 1px 6px; border-radius: 8px; margin-left: 4px; vertical-align: middle; }
+  .tag-rv  { border: 0.5px solid var(--green); color: var(--green); background: var(--green-light); }
+  .tag-tr  { border: 0.5px solid var(--amber); color: var(--amber); background: var(--amber-light); }
+
+  .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 1rem; }
+  .perf-label { font-family: 'Courier New', monospace; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+  .perf-val   { font-family: 'Courier New', monospace; font-size: 1.05rem; font-weight: bold; line-height: 1; }
+  .perf-val.pos { color: var(--green); }
+  .perf-val.neg { color: var(--red); }
+  .perf-val.na  { color: var(--muted); font-size: 0.78rem; font-weight: normal; }
 
   .skeleton { display: inline-block; height: 14px; border-radius: 4px; background: var(--border); animation: shimmer 1.4s infinite; }
   @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-  .legend { margin-top: 1.2rem; font-family: 'Courier New', monospace; font-size: 0.68rem; color: var(--muted); line-height: 1.9; }
-  .legend span { margin-right: 1.5rem; }
+  .legend {
+    margin-top: 1.5rem;
+    display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;
+    font-family: 'Courier New', monospace; font-size: 0.66rem; color: var(--muted);
+    border-top: 1px solid var(--border); padding-top: 1rem;
+  }
+  .legend-item { display: flex; align-items: baseline; gap: 0.4rem; }
+  .legend-key { color: var(--text); font-weight: bold; }
+  .legend-status { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
+  .legend-status #statusDate { color: var(--muted); }
+  .legend-status #statusDate::before { content: '·'; margin-right: 0.5rem; }
+  .legend-src { font-size: 0.62rem; opacity: 0.6; }
 
   @media (max-width: 700px) {
     body { padding: 1.2rem 1rem 3rem; }
     h1   { font-size: 1.3rem; }
-    .detail-inner { grid-template-columns: 1fr 1fr; }
+    .detail-inner { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -132,15 +166,12 @@
 <div class="header">
   <div>
     <h1>Ranking de Fundos</h1>
-    <div class="subtitle">CAGR calculado com dados diários da CVM · atualizado automaticamente</div>
+    <div class="subtitle">CAGR · dados diários da CVM · atualizado automaticamente</div>
   </div>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☽ escuro</button>
 </div>
 
-<div class="status-bar">
-  <div><span class="status-dot loading" id="statusDot"></span><span id="statusText">Carregando dados…</span></div>
-  <div id="statusDate"></div>
-</div>
+
 
 <div class="table-wrap">
   <table>
@@ -159,33 +190,34 @@
 </div>
 
 <div class="legend">
-  <span>CAGR = taxa de crescimento anual composta</span>
-  <span>N/D = dados insuficientes para o período</span>
-  <span>Clique num fundo para ver detalhes · clique no cabeçalho para ordenar</span>
-  <span>Fonte: CVM / inf_diario_fi · IBOV: Yahoo Finance</span>
+  <div class="legend-item"><span class="legend-key">CAGR</span><span>taxa de crescimento anual composta</span></div>
+  <div class="legend-item"><span class="legend-key">N/D</span><span>dados insuficientes para o período</span></div>
+  <div class="legend-status">
+    <span class="status-dot loading" id="statusDot"></span><span id="statusText">Carregando…</span>
+    <span id="statusDate"></span>
+  </div>
+  <div class="legend-item legend-src">CVM · inf_diario_fi · IBOV: Yahoo Finance</div>
 </div>
 
 <script>
-// ── Fund metadata ─────────────────────────────────────────────────────────────
 const FUND_META = {
-  "22.232.927/0001-90": { nome:"Tarpon GT",         inception:"2010-07-12", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"BTG",      obs:"" },
-  "17.400.251/0001-66": { nome:"Organon",            inception:"2013-02-18", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "18.302.338/0001-63": { nome:"Ártica Long Term",   inception:"2013-06-27", tipo:"Long Only",    trib:"RV", expo:"Majoritariamente Brasil",  banco:"BTG / C6", obs:"" },
-  "37.495.383/0001-26": { nome:"Genoa Arpa",         inception:"2021-04-30", tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"C6",       obs:"" },
-  "42.698.666/0001-05": { nome:"Artax Ultra",        inception:"2022-05-31", tipo:"Long Biased",  trib:"RV", expo:"Internacional",            banco:"Itaú",     obs:"Melhor versão: Itaú Artax Endurance (tributação RV)" },
-  "24.623.392/0001-03": { nome:"Guepardo Long Bias", inception:"2016-07-11", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "28.747.685/0001-53": { nome:"Kapitalo Tarkus",    inception:"2017-11-06", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"XP",       obs:"" },
-  "10.500.884/0001-05": { nome:"Real Investor",      inception:"2012-02-29", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "35.744.790/0001-02": { nome:"Schroder Tech L&S",  inception:"2020-04-01", tipo:"Multimercado", trib:"TR", expo:"Internacional",            banco:"BTG",      obs:"" },
-  "38.954.217/0001-03": { nome:"Pátria Long Biased", inception:"2020-10-30", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "32.073.525/0001-43": { nome:"Absolute Pace",      inception:"2018-12-27", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "21.689.246/0001-92": { nome:"Arbor",              inception:"2015-03-23", tipo:"Long Only",    trib:"RV", expo:"Internacional",            banco:"BTG",      obs:"" },
-  "14.438.229/0001-17": { nome:"Charles River",      inception:"2014-10-30", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"C6",       obs:"" },
-  "17.397.315/0001-17": { nome:"SPX Falcon",         inception:"2012-09-17", tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"Itaú",     obs:"" },
+  "22.232.927/0001-90": { nome:"Tarpon GT",         inception:"2010-07-12", initialQuota:1.2136, maxQuota:30.3767845,  tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"BTG",      obs:"" },
+  "17.400.251/0001-66": { nome:"Organon",            inception:"2013-02-22", initialQuota:1.0000, maxQuota:23.4157589,  tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "18.302.338/0001-63": { nome:"Ártica Long Term",   inception:"2013-06-27", initialQuota:0.7647, maxQuota:20.9451521,  tipo:"Long Only",    trib:"RV", expo:"Majoritariamente Brasil",  banco:"BTG / C6", obs:"" },
+  "37.495.383/0001-26": { nome:"Genoa Arpa",         inception:"2021-04-30", initialQuota:1.0000, maxQuota:2.3753795,   tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"C6",       obs:"" },
+  "42.698.666/0001-05": { nome:"Artax Ultra",        inception:"2022-05-31", initialQuota:1.0000, maxQuota:2.0535150,   tipo:"Long Biased",  trib:"RV", expo:"Internacional",            banco:"Itaú",     obs:"Melhor versão: Itaú Artax Endurance (tributação RV)" },
+  "24.623.392/0001-03": { nome:"Guepardo Long Bias", inception:"2016-07-11", initialQuota:1.0000, maxQuota:8.5831314,   tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "28.747.685/0001-53": { nome:"Kapitalo Tarkus",    inception:"2017-11-06", initialQuota:1.0000, maxQuota:4.2435095,   tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"XP",       obs:"" },
+  "10.500.884/0001-05": { nome:"Real Investor",      inception:"2012-02-29", initialQuota:3.6300, maxQuota:31.0097067,  tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "35.744.790/0001-02": { nome:"Schroder Tech L&S",  inception:"2020-04-01", initialQuota:1.0000, maxQuota:2.8658328,   tipo:"Multimercado", trib:"TR", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "38.954.217/0001-03": { nome:"Pátria Long Biased", inception:"2020-10-30", initialQuota:1.0000, maxQuota:3.0035117,   tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "32.073.525/0001-43": { nome:"Absolute Pace",      inception:"2018-12-27", initialQuota:1.0000, maxQuota:4.2214960,   tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "21.689.246/0001-92": { nome:"Arbor",              inception:"2015-03-23", initialQuota:1.0000, maxQuota:8.2977230,   tipo:"Long Only",    trib:"RV", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "14.438.229/0001-17": { nome:"Charles River",      inception:"2011-11-07", initialQuota:1.0000, maxQuota:13.4070715,  tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"C6",       obs:"" },
+  "17.397.315/0001-17": { nome:"SPX Falcon",         inception:"2012-09-17", initialQuota:1.0000, maxQuota:7.3045380,   tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"Itaú",     obs:"" },
 };
 const TRIB_LABEL = { RV:"Renda Variável", TR:"Tabela Regressiva" };
 
-// ── Theme ─────────────────────────────────────────────────────────────────────
 function toggleTheme() {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', dark ? '' : 'dark');
@@ -199,19 +231,24 @@ function toggleTheme() {
   }
 })();
 
-// ── State ─────────────────────────────────────────────────────────────────────
 let funds        = [];
 let ibov         = { cagr12: null, cagr36: null, cagr60: null };
-let currentSort  = 'inception';
-let sortDir      = -1;
+let currentSort  = 'cagr36';
+let sortDir      = 1;
 let expandedCnpj = null;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function fmtPct(v) {
   if (v === null || v === undefined || isNaN(v))
     return '<span class="cagr-val na">N/D</span>';
   const sign = v >= 0 ? '+' : '';
   return `<span class="cagr-val ${v >= 0 ? 'pos' : 'neg'}">${sign}${v.toFixed(2)}%</span>`;
+}
+
+function fmtPctLarge(v) {
+  if (v === null || v === undefined || isNaN(v))
+    return '<span class="perf-val na">N/D</span>';
+  const sign = v >= 0 ? '+' : '';
+  return `<span class="perf-val ${v >= 0 ? 'pos' : 'neg'}">${sign}${v.toFixed(1)}%</span>`;
 }
 
 function fmtTenure(cnpj) {
@@ -238,24 +275,35 @@ function tenureDays(cnpj) {
 function cagrInception(f) {
   const meta = FUND_META[f.cnpjFmt];
   if (!meta || !meta.inception || !f.latestDate) return f.cagrInception ?? null;
-  // Assume cota inicial R$ 1.00 on real inception date
-  // Use earliest CVM quota as the end-point base quota
-  const inceptionQuota = 1.0;
+  const inceptionQuota = meta.initialQuota ?? 1.0;
   const latestQuota    = f.latestQuota;
   if (!latestQuota) return f.cagrInception ?? null;
   const years = (new Date(f.latestDate) - new Date(meta.inception)) / (365.25 * 86400000);
   if (years <= 0) return null;
   return (Math.pow(latestQuota / inceptionQuota, 1 / years) - 1) * 100;
 }
+
+function calcDrawdown(f) {
+  if (!f.maxQuota || !f.latestQuota) return null;
+  if (f.latestQuota >= f.maxQuota) return 0;
+  return ((f.latestQuota - f.maxQuota) / f.maxQuota) * 100;
+}
+
+function fmtDrawdown(v) {
+  if (v === null) return '<span class="perf-val na">N/D</span>';
+  if (v === 0)    return '<span class="perf-val" style="color:var(--green)">0,0%</span>';
+  return `<span class="perf-val neg">${v.toFixed(1)}%</span>`;
+}
+
+function getSortVal(f, key) {
   if (key === 'tenure')    return tenureDays(f.cnpjFmt);
   if (key === 'inception') return cagrInception(f) ?? -Infinity;
   return f[key] ?? -Infinity;
 }
 
-// ── Sort ──────────────────────────────────────────────────────────────────────
 function sortBy(key) {
   if (currentSort === key) { sortDir *= -1; }
-  else { currentSort = key; sortDir = -1; }
+  else { currentSort = key; sortDir = 1; }
   updateHeaders();
   render();
 }
@@ -268,27 +316,81 @@ function updateHeaders() {
     if (!th) return;
     th.classList.remove('sorted-asc','sorted-desc');
     if (k === currentSort) {
-      th.classList.add(sortDir === -1 ? 'sorted-desc' : 'sorted-asc');
-      th.textContent = TH_LABELS[k] + (sortDir === -1 ? ' ↓' : ' ↑');
+      th.classList.add(sortDir === 1 ? 'sorted-desc' : 'sorted-asc');
+      th.textContent = TH_LABELS[k] + (sortDir === 1 ? ' ↓' : ' ↑');
     } else {
       th.textContent = TH_LABELS[k] + ' ↕';
     }
   });
 }
 
-// ── Toggle detail ─────────────────────────────────────────────────────────────
 function toggleDetail(cnpj) {
   expandedCnpj = expandedCnpj === cnpj ? null : cnpj;
   render();
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+function buildDetailPanel(f, isExp) {
+  const meta = FUND_META[f.cnpjFmt] || {};
+  const id   = (f.cnpjFmt || '').replace(/[^a-z0-9]/gi, '');
+  const tribClass = meta.trib === 'RV' ? 'tag-rv' : 'tag-tr';
+  const inception = meta.inception ? meta.inception.split('-').reverse().join('/') : '—';
+  const tenure = fmtTenure(f.cnpjFmt).replace(/<[^>]+>/g,'');
+
+  return `<div class="detail-panel ${isExp ? 'open' : ''}" id="detail-${id}">
+    <div class="detail-inner">
+
+      <div class="detail-col">
+        <div class="detail-col-header">Performance CAGR</div>
+        <div class="perf-grid">
+          <div><div class="perf-label">12 meses</div>${fmtPctLarge(f.cagr12)}</div>
+          <div><div class="perf-label">36 meses</div>${fmtPctLarge(f.cagr36)}</div>
+          <div><div class="perf-label">60 meses</div>${fmtPctLarge(f.cagr60)}</div>
+          <div><div class="perf-label">Desde o início</div>${fmtPctLarge(cagrInception(f))}</div>
+          <div style="grid-column:1/-1;border-top:1px solid var(--border);margin-top:0.3rem;padding-top:0.5rem;">
+            <div class="perf-label" style="margin-bottom:3px">Drawdown atual</div>
+            ${fmtDrawdown(calcDrawdown(f))}
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-col">
+        <div class="detail-col-header">Sobre o fundo</div>
+        <div class="ditem">
+          <div class="dlabel">Nome</div>
+          <div class="dval" style="font-size:0.76rem">${f.name}</div>
+        </div>
+        <div class="ditem">
+          <div class="dlabel">Tipo · Exposição</div>
+          <div class="dval">${meta.tipo || '—'} · ${meta.expo || '—'}</div>
+        </div>
+      </div>
+
+      <div class="detail-col">
+        <div class="detail-col-header">Acesso</div>
+        <div class="ditem">
+          <div class="dlabel">Início · Track record</div>
+          <div class="dval">${inception} · ${tenure}</div>
+        </div>
+        <div class="ditem">
+          <div class="dlabel">Tributação</div>
+          <div class="dval">${TRIB_LABEL[meta.trib] || meta.trib || '—'} <span class="tag ${tribClass}">${meta.trib || '—'}</span></div>
+        </div>
+        <div class="ditem">
+          <div class="dlabel">Melhor banco</div>
+          <div class="dval">${meta.banco || '—'}</div>
+          ${meta.obs ? `<div class="dnote">${meta.obs}</div>` : ''}
+        </div>
+      </div>
+
+    </div>
+  </div>`;
+}
+
 function render() {
   const sorted = [...funds].sort((a, b) =>
     sortDir * (getSortVal(b, currentSort) - getSortVal(a, currentSort))
   );
 
-  // Find IBOV rank position for numeric sorts
   let ibovPos = null;
   if (['cagr12','cagr36','cagr60'].includes(currentSort)) {
     const iv = ibov[currentSort];
@@ -304,8 +406,7 @@ function render() {
 
     const meta  = FUND_META[f.cnpjFmt] || {};
     const nome  = meta.nome || f.name;
-    const rc    = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
-    const id    = (f.cnpjFmt || '').replace(/[^a-z0-9]/gi, '');
+    const rc    = sortDir === 1 ? (i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '') : '';
     const isExp = expandedCnpj === f.cnpjFmt;
 
     if (f.error) {
@@ -319,9 +420,6 @@ function render() {
       <tr class="detail-row"><td colspan="6"></td></tr>`;
       return;
     }
-
-    const tribClass = meta.trib === 'RV' ? 'tag-rv' : 'tag-tr';
-    const intl      = meta.expo && meta.expo.includes('Internacional');
 
     html += `
     <tr class="fund-row" onclick="toggleDetail('${f.cnpjFmt}')">
@@ -338,41 +436,10 @@ function render() {
       <td>${fmtPct(cagrInception(f))}</td>
       <td>${fmtTenure(f.cnpjFmt)}</td>
     </tr>
-    <tr class="detail-row"><td colspan="6">
-      <div class="detail-panel ${isExp?'open':''}" id="detail-${id}">
-        <div class="detail-inner">
-          <div class="ditem">
-            <div class="dlabel">Nome completo</div>
-            <div class="dval" style="font-size:0.72rem">${f.name}</div>
-          </div>
-          <div class="ditem">
-            <div class="dlabel">Início</div>
-            <div class="dval">${meta.inception ? meta.inception.split('-').reverse().join('/') : '—'}</div>
-          </div>
-          <div class="ditem">
-            <div class="dlabel">Tipo</div>
-            <div class="dval">${meta.tipo || '—'}</div>
-          </div>
-          <div class="ditem">
-            <div class="dlabel">Tributação</div>
-            <div class="dval">${TRIB_LABEL[meta.trib] || meta.trib || '—'} <span class="tag ${tribClass}">${meta.trib || '—'}</span></div>
-          </div>
-          <div class="ditem">
-            <div class="dlabel">Exposição</div>
-            <div class="dval">${meta.expo || '—'}</div>
-          </div>
-          <div class="ditem">
-            <div class="dlabel">Melhor banco</div>
-            <div class="dval">${meta.banco || '—'}</div>
-            ${meta.obs ? `<div class="dnote">${meta.obs}</div>` : ''}
-          </div>
-        </div>
-      </div>
-    </td></tr>`;
+    <tr class="detail-row"><td colspan="6">${buildDetailPanel(f, isExp)}</td></tr>`;
   });
 
   if (ibovPos === null) html += buildIbovRow();
-
   document.getElementById('fundBody').innerHTML = html;
 }
 
@@ -393,7 +460,6 @@ function buildIbovRow() {
   </tr>`;
 }
 
-// ── Load data.json ────────────────────────────────────────────────────────────
 async function load() {
   try {
     const res  = await fetch('data.json?v=' + Date.now());
@@ -423,11 +489,7 @@ async function load() {
 
     updateHeaders();
     render();
-    // Load IBOV from data.json (fetched server-side by Python script)
-    if (data.ibov) {
-      ibov = data.ibov;
-      render();
-    }
+    if (data.ibov) { ibov = data.ibov; render(); }
 
   } catch(e) {
     document.getElementById('statusDot').className = 'status-dot error';
@@ -435,7 +497,6 @@ async function load() {
   }
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
 document.getElementById('fundBody').innerHTML = Array.from({length:14}, (_,i) => `<tr class="fund-row">
   <td><div class="fund-name-cell"><span class="rank">${i+1}</span>
     <div><span class="skeleton" style="width:${130+Math.random()*70|0}px;display:block;margin-bottom:5px"></span>
