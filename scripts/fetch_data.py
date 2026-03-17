@@ -110,26 +110,35 @@ def find_inception(fund, anchor_year):
     Find the oldest available quota for this fund independently.
     Step 1: probe December of each year from anchor_year-1 back to
             CVM_OLDEST_YEAR to find the oldest year this fund appears.
-    Step 2: scan Jan→Dec of that oldest year (and the year before)
-            month by month to find the exact first quota.
+    Step 2: scan Jan→Dec of that oldest year (and the year before,
+            only if December of that prior year also exists in CVM).
     """
     print(f"    inception search: {fund['cnpjFmt']}")
-    oldest_year_found = anchor_year  # default: started this year
+    oldest_year_found = anchor_year
+
+    # Track which years had valid CVM files (not 404) so we don't scan months of missing years
+    cvm_has_year = {}
 
     for y in range(anchor_year - 1, CVM_OLDEST_YEAR - 1, -1):
         rows = fund_rows_in_month(y, 12, fund)
+        data = CSV_CACHE.get((y, 12))
+        cvm_has_year[y] = data is not None  # True if file exists, False if 404
         if rows:
             oldest_year_found = y
             print(f"      found in {y}-12")
-        # Stop searching if we've gone 2 years without finding anything
-        # AND we already found a year (avoids scanning all the way to 2010 for new funds)
-        elif oldest_year_found < anchor_year and (anchor_year - 1 - y) >= 2:
+        elif oldest_year_found < anchor_year and not cvm_has_year[y]:
+            # File doesn't exist in CVM at all — safe to stop
+            break
+        elif oldest_year_found < anchor_year and (y < oldest_year_found - 2):
+            # Found something before, now 2+ years of silence — stop
             break
 
-    # Scan month by month in oldest year (and one year earlier just in case)
+    # Scan month by month in oldest year (and one year earlier only if CVM has it)
     for scan_year in [oldest_year_found - 1, oldest_year_found]:
         if scan_year < CVM_OLDEST_YEAR:
             continue
+        if scan_year < oldest_year_found and not cvm_has_year.get(scan_year, True):
+            continue  # skip years we know don't exist in CVM
         for m in range(1, 13):
             rows = fund_rows_in_month(scan_year, m, fund)
             if rows:
@@ -177,11 +186,11 @@ def process_fund(fund, anchor):
     inc_quota = inception["quota"] if inception else None
     inc_date  = inception["date"]  if inception else None
 
-    def do_cagr(q, end, anchor_date):
+    def do_cagr(q):
         if not q:
             return None
-        yrs = years_apart(q["date"], end)
-        return cagr(q["quota"], end, yrs)
+        yrs = years_apart(q["date"], end_date)
+        return cagr(q["quota"], end_quota, yrs)
 
     return {
         "name":          fund["name"],
@@ -193,9 +202,9 @@ def process_fund(fund, anchor):
         "anchor12m":     a12.isoformat(),
         "anchor36m":     a36.isoformat(),
         "anchor60m":     a60.isoformat(),
-        "cagr12":        do_cagr(q12, end_quota, a12),
-        "cagr36":        do_cagr(q36, end_quota, a36),
-        "cagr60":        do_cagr(q60, end_quota, a60),
+        "cagr12":        do_cagr(q12),
+        "cagr36":        do_cagr(q36),
+        "cagr60":        do_cagr(q60),
         "cagrInception": cagr(inc_quota, end_quota, years_apart(inc_date, end_date)) if inc_date else None,
         "error": False,
     }
