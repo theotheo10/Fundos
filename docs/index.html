@@ -31,14 +31,18 @@
     max-width: 1100px; margin: 0 auto;
     transition: background 0.2s, color 0.2s;
   }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap; }
-  h1 { font-size: 1.6rem; font-weight: normal; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
-  .subtitle { font-size: 0.82rem; color: var(--muted); font-family: 'Courier New', monospace; }
+  .header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+  }
+  h1 { font-size: 1.6rem; font-weight: normal; letter-spacing: -0.02em; }
+  .subtitle { font-size: 0.82rem; color: var(--muted); font-family: 'Courier New', monospace; margin-top: 0.2rem; }
   .theme-btn {
     font-family: 'Courier New', monospace; font-size: 0.72rem;
     padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
     background: transparent; color: var(--muted); cursor: pointer;
-    transition: all 0.15s; white-space: nowrap; margin-top: 4px;
+    transition: all 0.15s; white-space: nowrap;
   }
   .theme-btn:hover { border-color: var(--text); color: var(--text); }
 
@@ -134,10 +138,9 @@
   .tag-rv  { border: 0.5px solid var(--green); color: var(--green); background: var(--green-light); }
   .tag-tr  { border: 0.5px solid var(--amber); color: var(--amber); background: var(--amber-light); }
 
-  .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 1rem; }
-  .perf-item { }
-  .perf-label { font-family: 'Courier New', monospace; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 1px; }
-  .perf-val   { font-family: 'Courier New', monospace; font-size: 1rem; font-weight: bold; }
+  .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1.2rem; }
+  .perf-label { font-family: 'Courier New', monospace; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
+  .perf-val   { font-family: 'Courier New', monospace; font-size: 1.05rem; font-weight: bold; line-height: 1; }
   .perf-val.pos { color: var(--green); }
   .perf-val.neg { color: var(--red); }
   .perf-val.na  { color: var(--muted); font-size: 0.78rem; font-weight: normal; }
@@ -145,8 +148,15 @@
   .skeleton { display: inline-block; height: 14px; border-radius: 4px; background: var(--border); animation: shimmer 1.4s infinite; }
   @keyframes shimmer { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-  .legend { margin-top: 1.2rem; font-family: 'Courier New', monospace; font-size: 0.68rem; color: var(--muted); line-height: 1.9; }
-  .legend span { margin-right: 1.5rem; }
+  .legend {
+    margin-top: 1.5rem;
+    display: flex; gap: 2rem; flex-wrap: wrap;
+    font-family: 'Courier New', monospace; font-size: 0.66rem; color: var(--muted);
+    border-top: 1px solid var(--border); padding-top: 1rem;
+  }
+  .legend-item { display: flex; align-items: baseline; gap: 0.4rem; }
+  .legend-key { color: var(--text); font-weight: bold; }
+  .legend-src { margin-left: auto; font-size: 0.62rem; opacity: 0.7; }
 
   @media (max-width: 700px) {
     body { padding: 1.2rem 1rem 3rem; }
@@ -160,7 +170,7 @@
 <div class="header">
   <div>
     <h1>Ranking de Fundos</h1>
-    <div class="subtitle">CAGR calculado com dados diários da CVM · atualizado automaticamente</div>
+    <div class="subtitle">CAGR · dados diários da CVM · atualizado automaticamente</div>
   </div>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☽ escuro</button>
 </div>
@@ -187,10 +197,9 @@
 </div>
 
 <div class="legend">
-  <span>CAGR = taxa de crescimento anual composta</span>
-  <span>N/D = dados insuficientes para o período</span>
-  <span>Clique num fundo para ver detalhes · clique no cabeçalho para ordenar</span>
-  <span>Fonte: CVM / inf_diario_fi · IBOV: Yahoo Finance</span>
+  <div class="legend-item"><span class="legend-key">CAGR</span><span>taxa de crescimento anual composta</span></div>
+  <div class="legend-item"><span class="legend-key">N/D</span><span>dados insuficientes para o período</span></div>
+  <div class="legend-item legend-src">CVM · inf_diario_fi · IBOV: Yahoo Finance</div>
 </div>
 
 <script>
