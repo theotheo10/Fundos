@@ -288,14 +288,17 @@ function fmtPct(v) {
 
 function fmtTenure(d) {
   if (!d) return '<span class="tenure">—</span>';
-  const start = new Date(d), today = new Date();
-  let y = today.getFullYear() - start.getFullYear();
-  let m = today.getMonth()    - start.getMonth();
-  if (m < 0) { y--; m += 12; }
+  const start = new Date(d + 'T00:00:00');
+  const today = new Date();
+  let years  = today.getFullYear() - start.getFullYear();
+  let months = today.getMonth()    - start.getMonth();
+  let days   = today.getDate()     - start.getDate();
+  if (days   < 0) { months--; }
+  if (months < 0) { years--; months += 12; }
   const parts = [];
-  if (y > 0) parts.push(y + ' ano'  + (y > 1 ? 's' : ''));
-  if (m > 0) parts.push(m + ' mês'  + (m > 1 ? 'es' : ''));
-  return `<span class="tenure">${parts.join(' ') || '< 1 mês'}</span>`;
+  if (years  > 0) parts.push(years  + ' ano'  + (years  !== 1 ? 's' : ''));
+  if (months > 0) parts.push(months + ' mês'  + (months !== 1 ? 'es' : ''));
+  return `<span class="tenure">${parts.join(' e ') || '< 1 mês'}</span>`;
 }
 
 function tenureDays(d) {
