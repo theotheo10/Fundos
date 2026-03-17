@@ -271,6 +271,7 @@ def process_fund(fund, anchor):
         "cnpj":          fund["cnpjFmt"],
         "cnpjFmt":       fund["cnpjFmt"],
         "latestDate":    end_date,
+        "latestQuota":   end_quota,
         "inceptionDate": inc_date,
         "anchorDate":    anchor.isoformat(),
         "anchor12m":     a12.isoformat(),
