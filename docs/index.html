@@ -203,7 +203,7 @@ function toggleTheme() {
 let funds        = [];
 let ibov         = { cagr12: null, cagr36: null, cagr60: null };
 let currentSort  = 'cagr36';
-let sortDir      = -1;
+let sortDir      = 1;
 let expandedCnpj = null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ function getSortVal(f, key) {
 // ── Sort ──────────────────────────────────────────────────────────────────────
 function sortBy(key) {
   if (currentSort === key) { sortDir *= -1; }
-  else { currentSort = key; sortDir = -1; }
+  else { currentSort = key; sortDir = 1; }
   updateHeaders();
   render();
 }
@@ -268,8 +268,8 @@ function updateHeaders() {
     if (!th) return;
     th.classList.remove('sorted-asc','sorted-desc');
     if (k === currentSort) {
-      th.classList.add(sortDir === -1 ? 'sorted-desc' : 'sorted-asc');
-      th.textContent = TH_LABELS[k] + (sortDir === -1 ? ' ↓' : ' ↑');
+      th.classList.add(sortDir === 1 ? 'sorted-desc' : 'sorted-asc');
+      th.textContent = TH_LABELS[k] + (sortDir === 1 ? ' ↓' : ' ↑');
     } else {
       th.textContent = TH_LABELS[k] + ' ↕';
     }
@@ -304,7 +304,7 @@ function render() {
 
     const meta  = FUND_META[f.cnpjFmt] || {};
     const nome  = meta.nome || f.name;
-    const rc    = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+    const rc    = sortDir === 1 ? (i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '') : '';
     const id    = (f.cnpjFmt || '').replace(/[^a-z0-9]/gi, '');
     const isExp = expandedCnpj === f.cnpjFmt;
 
