@@ -237,7 +237,7 @@ def find_anchor_date(cur_year, cur_month):
     return datetime.date(cur_year, cur_month, 1)
 
 
-def process_fund(fund, anchor):
+def process_fund(fund, anchor, prev_max_quotas):
     print(f"\n── {fund['name']}")
 
     latest = quota_on_or_before(anchor, fund)
@@ -266,12 +266,26 @@ def process_fund(fund, anchor):
         yrs = years_apart(q["date"], end_date)
         return cagr(q["quota"], end_quota, yrs)
 
+    # ── Max quota: carry forward previous, update if current is higher ──
+    prev = prev_max_quotas.get(fund["cnpjFmt"], {})
+    prev_max = prev.get("maxQuota", 0) or 0
+    if end_quota >= prev_max:
+        max_quota      = end_quota
+        max_quota_date = end_date
+        print(f"  new max quota: {max_quota} on {max_quota_date}")
+    else:
+        max_quota      = prev_max
+        max_quota_date = prev.get("maxQuotaDate", "")
+        print(f"  max quota unchanged: {max_quota} on {max_quota_date}")
+
     result = {
         "name":          fund["name"],
         "cnpj":          fund["cnpjFmt"],
         "cnpjFmt":       fund["cnpjFmt"],
         "latestDate":    end_date,
         "latestQuota":   end_quota,
+        "maxQuota":      max_quota,
+        "maxQuotaDate":  max_quota_date,
         "inceptionDate": inc_date,
         "anchorDate":    anchor.isoformat(),
         "anchor12m":     a12.isoformat(),
@@ -364,7 +378,23 @@ def main():
     a36 = subtract_months(anchor, 36)
     a60 = subtract_months(anchor, 60)
 
-    results = [process_fund(f, anchor) for f in FUNDS]
+    # ── Load previous maxQuota values from existing data.json ──
+    out_path = Path(__file__).parent.parent / "docs" / "data.json"
+    prev_max_quotas = {}
+    if out_path.exists():
+        try:
+            prev_data = json.loads(out_path.read_text())
+            for f in prev_data.get("funds", []):
+                if f.get("cnpjFmt") and f.get("maxQuota"):
+                    prev_max_quotas[f["cnpjFmt"]] = {
+                        "maxQuota":     f["maxQuota"],
+                        "maxQuotaDate": f.get("maxQuotaDate", ""),
+                    }
+            print(f"Loaded {len(prev_max_quotas)} previous max quotas from data.json")
+        except Exception as e:
+            print(f"Could not load previous data.json: {e}")
+
+    results = [process_fund(f, anchor, prev_max_quotas) for f in FUNDS]
 
     print(f"\n── Ibovespa")
     ibov = fetch_ibov(anchor, a12, a36, a60)
@@ -376,7 +406,6 @@ def main():
         "funds":       results,
     }
 
-    out_path = Path(__file__).parent.parent / "docs" / "data.json"
     out_path.parent.mkdir(exist_ok=True)
     out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2))
     print(f"\n✓ Wrote {out_path} ({len(results)} funds)")
