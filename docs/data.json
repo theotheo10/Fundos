@@ -1,4 +1,77 @@
 {
-  "generatedAt": "2024-01-01T00:00:00Z",
-  "funds": []
+  "generatedAt": "2026-03-17T18:13:54.674010Z",
+  "funds": [
+    {
+      "name": "Tarpon GT FIF Cotas FIA",
+      "cnpj": "22232927000190",
+      "cnpjFmt": "22.232.927/0001-90",
+      "error": true
+    },
+    {
+      "name": "Organon FIF Cotas FIA",
+      "cnpj": "17400251000166",
+      "cnpjFmt": "17.400.251/0001-66",
+      "error": true
+    },
+    {
+      "name": "Artica Long Term FIA",
+      "cnpj": "18302338000163",
+      "cnpjFmt": "18.302.338/0001-63",
+      "error": true
+    },
+    {
+      "name": "Genoa Capital Arpa CIC Classe FIM RL",
+      "cnpj": "37495383000126",
+      "cnpjFmt": "37.495.383/0001-26",
+      "error": true
+    },
+    {
+      "name": "Itaú Artax Ultra Multimercado FIF DA CIC RL",
+      "cnpj": "42698666000105",
+      "cnpjFmt": "42.698.666/0001-05",
+      "error": true
+    },
+    {
+      "name": "Guepardo Long Bias RV FIM",
+      "cnpj": "24623392000103",
+      "cnpjFmt": "24.623.392/0001-03",
+      "error": true
+    },
+    {
+      "name": "Kapitalo Tarkus FIF Cotas FIA",
+      "cnpj": "28747685000153",
+      "cnpjFmt": "28.747.685/0001-53",
+      "error": true
+    },
+    {
+      "name": "Real Investor FIC FIF Ações RL",
+      "cnpj": "10500884000105",
+      "cnpjFmt": "10.500.884/0001-05",
+      "error": true
+    },
+    {
+      "name": "Gama Schroder Gaia Contour Tech Equity L&S BRL FIF CIC Mult IE RL",
+      "cnpj": "35744790000102",
+      "cnpjFmt": "35.744.790/0001-02",
+      "error": true
+    },
+    {
+      "name": "Patria Long Biased FIF Cotas FIM",
+      "cnpj": "38954217000103",
+      "cnpjFmt": "38.954.217/0001-03",
+      "error": true
+    },
+    {
+      "name": "Absolute Pace Long Biased FIC FIF Ações RL",
+      "cnpj": "32073525000143",
+      "cnpjFmt": "32.073.525/0001-43",
+      "error": true
+    },
+    {
+      "name": "Arbor FIC FIA",
+      "cnpj": "21689246000192",
+      "cnpjFmt": "21.689.246/0001-92",
+      "error": true
+    }
+  ]
 }
