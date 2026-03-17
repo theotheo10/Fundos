@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
 """
 Fetches daily quota data from CVM.
-CAGR windows are anchored to fixed reference dates so all funds
-are compared over exactly the same calendar periods.
+CAGR windows use fixed anchor dates shared across all funds.
 """
 
-import json
-import zipfile
-import io
-import math
-import datetime
-import urllib.request
+import json, zipfile, io, math, datetime, urllib.request, calendar
 from pathlib import Path
 
 FUNDS = [
@@ -31,17 +25,14 @@ FUNDS = [
 ]
 
 CSV_CACHE = {}
-CVM_OLDEST_YEAR = 2005
+CVM_OLDEST_YEAR = 2010  # no funds older than this
 
 
-def fetch_csv(year: int, month: int):
+def fetch_csv(year, month):
     key = (year, month)
     if key in CSV_CACHE:
         return CSV_CACHE[key]
-    url = (
-        f"https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/"
-        f"inf_diario_fi_{year}{month:02d}.zip"
-    )
+    url = f"https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/inf_diario_fi_{year}{month:02d}.zip"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=60) as resp:
@@ -49,221 +40,172 @@ def fetch_csv(year: int, month: int):
         with zipfile.ZipFile(io.BytesIO(raw)) as zf:
             content = zf.read(zf.namelist()[0]).decode("windows-1252", errors="replace")
         lines = content.split("\n")
-        header = lines[0].split(";")
-        if header[0].startswith("\ufeff"):
-            header[0] = header[0][1:]
-        header = [h.strip() for h in header]
+        header = [h.strip().lstrip("\ufeff") for h in lines[0].split(";")]
         col_date  = header.index("DT_COMPTC") if "DT_COMPTC" in header else -1
         col_quota = header.index("VL_QUOTA")  if "VL_QUOTA"  in header else -1
-        print(f"  ✓ fetched {year}-{month:02d} ({len(lines)} lines)")
-        result = {"lines": lines, "col_date": col_date, "col_quota": col_quota}
-        CSV_CACHE[key] = result
-        return result
+        print(f"  ✓ {year}-{month:02d} ({len(lines)} lines)")
+        CSV_CACHE[key] = {"lines": lines, "col_date": col_date, "col_quota": col_quota}
+        return CSV_CACHE[key]
     except Exception as e:
         print(f"  ✗ {year}-{month:02d}: {e}")
         CSV_CACHE[key] = None
         return None
 
 
-def fund_rows_in_month(year: int, month: int, fund: dict) -> list[dict]:
-    """Return all (date, quota) pairs for this fund in the given month, sorted by date."""
+def fund_rows_in_month(year, month, fund):
     data = fetch_csv(year, month)
-    if not data or data["col_date"] < 0 or data["col_quota"] < 0:
+    if not data or data["col_date"] < 0:
         return []
-    cnpj, cnpjFmt = fund["cnpj"], fund["cnpjFmt"]
-    result = []
+    cnpj, fmt = fund["cnpj"], fund["cnpjFmt"]
+    out = []
     for line in data["lines"]:
-        if cnpj not in line and cnpjFmt not in line:
+        if cnpj not in line and fmt not in line:
             continue
         cols = line.split(";")
         try:
-            date  = cols[data["col_date"]].strip()
-            quota = float(cols[data["col_quota"]].replace(",", "."))
-            if date:
-                result.append({"date": date, "quota": quota})
+            d = cols[data["col_date"]].strip()
+            q = float(cols[data["col_quota"]].replace(",", "."))
+            if d:
+                out.append({"date": d, "quota": q})
         except (ValueError, IndexError):
             continue
-    result.sort(key=lambda r: r["date"])
-    return result
+    out.sort(key=lambda r: r["date"])
+    return out
 
 
-def quota_on_or_before(target_date: datetime.date, fund: dict):
-    """
-    Find the most recent quota for this fund on or before target_date.
-    Searches the target month first, then goes backwards up to 3 months
-    to handle holidays / weekends near month boundaries.
-    """
-    year, month = target_date.year, target_date.month
-    target_str = target_date.isoformat()
-
+def quota_on_or_before(target_date, fund):
+    y, m = target_date.year, target_date.month
+    ts = target_date.isoformat()
     for _ in range(3):
-        rows = fund_rows_in_month(year, month, fund)
-        # Filter rows on or before target_date
-        candidates = [r for r in rows if r["date"] <= target_str]
+        rows = fund_rows_in_month(y, m, fund)
+        candidates = [r for r in rows if r["date"] <= ts]
         if candidates:
-            return candidates[-1]  # most recent
-        # Go back one month
-        total = year * 12 + month - 2
-        year, month = divmod(total, 12)
-        month += 1
-
+            return candidates[-1]
+        total = y * 12 + m - 2
+        y, m = divmod(total, 12)
+        m += 1
     return None
 
 
-def first_quota_ever(fund: dict, cur_year: int, cur_month: int):
-    """
-    Find the very first quota by scanning all years back to CVM_OLDEST_YEAR.
-    Does NOT stop on 404 gaps — keeps scanning to handle archive holes.
-    """
-    years_with_fund = []
-
-    # Jump by year from current year back to oldest
-    y = cur_year
-    while y >= CVM_OLDEST_YEAR:
-        result = fund_rows_in_month(y, 12, fund)
-        if result:
-            years_with_fund.append(y)
-            print(f"    found in {y}-12")
-        y -= 1
-
-    if not years_with_fund:
-        # Fallback: try current year month by month
-        years_with_fund = [cur_year]
-
-    oldest_year = min(years_with_fund)
-
-    # Also check the year before oldest in case fund started late in prev year
-    for scan_year in [oldest_year - 1, oldest_year]:
-        if scan_year < CVM_OLDEST_YEAR:
-            continue
-        for m in range(1, 13):
-            rows = fund_rows_in_month(scan_year, m, fund)
-            if rows:
-                print(f"    inception: {rows[0]['date']}")
-                return rows[0]
-
-    return None
+def subtract_months(date, n):
+    total = date.year * 12 + (date.month - 1) - n
+    y, m = divmod(total, 12)
+    m += 1
+    last_day = calendar.monthrange(y, m)[1]
+    return datetime.date(y, m, min(date.day, last_day))
 
 
-def years_apart(date_a: str, date_b: str) -> float:
-    a = datetime.date.fromisoformat(date_a)
-    b = datetime.date.fromisoformat(date_b)
-    return (b - a).days / 365.25
+def years_apart(a, b):
+    return (datetime.date.fromisoformat(b) - datetime.date.fromisoformat(a)).days / 365.25
 
 
-def cagr(start: float, end: float, years: float):
+def cagr(start, end, years):
     if not start or not end or years <= 0:
         return None
     return (math.pow(end / start, 1.0 / years) - 1) * 100
 
 
-def add_months(d: datetime.date, n: int) -> datetime.date:
-    """Subtract n months from date d, clamping to last day of month."""
-    total = d.year * 12 + (d.month - 1) - n
-    y, m = divmod(total, 12)
-    m += 1
-    # Clamp day to last day of resulting month
-    import calendar
-    last_day = calendar.monthrange(y, m)[1]
-    day = min(d.day, last_day)
-    return datetime.date(y, m, day)
+def find_inception(fund, anchor_year):
+    """
+    Find the oldest available quota for this fund independently.
+    Step 1: probe December of each year from anchor_year-1 back to
+            CVM_OLDEST_YEAR to find the oldest year this fund appears.
+    Step 2: scan Jan→Dec of that oldest year (and the year before)
+            month by month to find the exact first quota.
+    """
+    print(f"    inception search: {fund['cnpjFmt']}")
+    oldest_year_found = anchor_year  # default: started this year
+
+    for y in range(anchor_year - 1, CVM_OLDEST_YEAR - 1, -1):
+        rows = fund_rows_in_month(y, 12, fund)
+        if rows:
+            oldest_year_found = y
+            print(f"      found in {y}-12")
+        # Stop searching if we've gone 2 years without finding anything
+        # AND we already found a year (avoids scanning all the way to 2010 for new funds)
+        elif oldest_year_found < anchor_year and (anchor_year - 1 - y) >= 2:
+            break
+
+    # Scan month by month in oldest year (and one year earlier just in case)
+    for scan_year in [oldest_year_found - 1, oldest_year_found]:
+        if scan_year < CVM_OLDEST_YEAR:
+            continue
+        for m in range(1, 13):
+            rows = fund_rows_in_month(scan_year, m, fund)
+            if rows:
+                print(f"      inception: {rows[0]['date']}")
+                return rows[0]
+
+    return None
 
 
-def process_fund(fund: dict, anchor_date: datetime.date) -> dict:
-    """
-    anchor_date = the shared reference date (most recent trading day with data).
-    All CAGR windows start from exactly anchor_date - N years,
-    ensuring identical periods across all funds.
-    """
+def find_anchor_date(cur_year, cur_month):
+    """Most recent date with data, using first fund as probe."""
+    probe = FUNDS[0]
+    for delta in range(3):
+        total = cur_year * 12 + cur_month - 1 - delta
+        y, m = divmod(total, 12)
+        m += 1
+        rows = fund_rows_in_month(y, m, probe)
+        if rows:
+            anchor = datetime.date.fromisoformat(rows[-1]["date"])
+            print(f"Anchor date: {anchor}")
+            return anchor
+    return datetime.date(cur_year, cur_month, 1)
+
+
+def process_fund(fund, anchor):
     print(f"\n── {fund['name']}")
 
-    # Latest quota — on or before anchor_date
-    latest = quota_on_or_before(anchor_date, fund)
+    latest = quota_on_or_before(anchor, fund)
     if not latest:
         print(f"  ✗ no data found")
         return {**fund, "error": True}
 
-    print(f"  latest: {latest['quota']} on {latest['date']} (anchor: {anchor_date})")
-    end_quota = latest["quota"]
-    end_date  = latest["date"]
+    print(f"  latest: {latest['quota']} on {latest['date']}")
+    end_quota, end_date = latest["quota"], latest["date"]
 
-    # Fixed anchor dates for each window — same for ALL funds
-    anchor_12m = add_months(anchor_date, 12)
-    anchor_36m = add_months(anchor_date, 36)
-    anchor_60m = add_months(anchor_date, 60)
+    a12 = subtract_months(anchor, 12)
+    a36 = subtract_months(anchor, 36)
+    a60 = subtract_months(anchor, 60)
 
-    print(f"  anchors → 12M:{anchor_12m} 36M:{anchor_36m} 60M:{anchor_60m}")
+    q12 = quota_on_or_before(a12, fund)
+    q36 = quota_on_or_before(a36, fund)
+    q60 = quota_on_or_before(a60, fund)
 
-    q12_res = quota_on_or_before(anchor_12m, fund)
-    q36_res = quota_on_or_before(anchor_36m, fund)
-    q60_res = quota_on_or_before(anchor_60m, fund)
+    inception = find_inception(fund, anchor.year)
+    inc_quota = inception["quota"] if inception else None
+    inc_date  = inception["date"]  if inception else None
 
-    q12 = q12_res["quota"] if q12_res else None
-    q36 = q36_res["quota"] if q36_res else None
-    q60 = q60_res["quota"] if q60_res else None
-
-    # Compute exact years between anchor points for precision
-    def exact_years(start_res, end_date_str):
-        if not start_res:
+    def do_cagr(q, end, anchor_date):
+        if not q:
             return None
-        return years_apart(start_res["date"], end_date_str)
+        yrs = years_apart(q["date"], end)
+        return cagr(q["quota"], end, yrs)
 
-    y12 = exact_years(q12_res, end_date)
-    y36 = exact_years(q36_res, end_date)
-    y60 = exact_years(q60_res, end_date)
-
-    inception = first_quota_ever(fund, anchor_date.year, anchor_date.month)
-    inception_quota = inception["quota"] if inception else None
-    inception_date  = inception["date"]  if inception else None
-    inc_years = years_apart(inception_date, end_date) if inception_date else None
-
-    result = {
+    return {
         "name":          fund["name"],
         "cnpj":          fund["cnpjFmt"],
         "cnpjFmt":       fund["cnpjFmt"],
         "latestDate":    end_date,
-        "inceptionDate": inception_date,
-        "anchorDate":    anchor_date.isoformat(),
-        "anchor12m":     anchor_12m.isoformat(),
-        "anchor36m":     anchor_36m.isoformat(),
-        "anchor60m":     anchor_60m.isoformat(),
-        "cagr12":        cagr(q12, end_quota, y12) if q12 and y12 else None,
-        "cagr36":        cagr(q36, end_quota, y36) if q36 and y36 else None,
-        "cagr60":        cagr(q60, end_quota, y60) if q60 and y60 else None,
-        "cagrInception": cagr(inception_quota, end_quota, inc_years) if inc_years else None,
-        "error":         False,
+        "inceptionDate": inc_date,
+        "anchorDate":    anchor.isoformat(),
+        "anchor12m":     a12.isoformat(),
+        "anchor36m":     a36.isoformat(),
+        "anchor60m":     a60.isoformat(),
+        "cagr12":        do_cagr(q12, end_quota, a12),
+        "cagr36":        do_cagr(q36, end_quota, a36),
+        "cagr60":        do_cagr(q60, end_quota, a60),
+        "cagrInception": cagr(inc_quota, end_quota, years_apart(inc_date, end_date)) if inc_date else None,
+        "error": False,
     }
-    print(f"  CAGR 12M={result['cagr12']}, 36M={result['cagr36']}, 60M={result['cagr60']}, inc={result['cagrInception']}")
-    return result
-
-
-def find_anchor_date(cur_year: int, cur_month: int) -> datetime.date:
-    """
-    Find the most recent date that has data for at least one fund.
-    We use the first fund as a probe — it just needs to exist.
-    """
-    probe = FUNDS[0]
-    for delta in range(3):
-        y, m = cur_year, cur_month
-        total = y * 12 + m - 1 - delta
-        y2, m2 = divmod(total, 12)
-        m2 += 1
-        rows = fund_rows_in_month(y2, m2, probe)
-        if rows:
-            last = datetime.date.fromisoformat(rows[-1]["date"])
-            print(f"Anchor date: {last}")
-            return last
-    return datetime.date(cur_year, cur_month, 1)
 
 
 def main():
-    today     = datetime.date.today()
-    cur_year  = today.year
-    cur_month = today.month
-
+    today = datetime.date.today()
     print(f"Running for {today.isoformat()}")
 
-    anchor = find_anchor_date(cur_year, cur_month)
+    anchor = find_anchor_date(today.year, today.month)
     results = [process_fund(f, anchor) for f in FUNDS]
 
     output = {
