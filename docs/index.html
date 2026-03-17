@@ -47,12 +47,11 @@
   .theme-btn:hover { border-color: var(--text); color: var(--text); }
 
   .status-bar {
-    font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--muted);
-    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 8px 14px; margin-bottom: 1.5rem;
+    font-family: 'Courier New', monospace; font-size: 0.7rem; color: var(--muted);
     display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 1.2rem;
   }
-  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
+  .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); margin-right: 6px; vertical-align: middle; }
   .status-dot.loading { background: var(--amber); animation: pulse 1.2s infinite; }
   .status-dot.ok      { background: var(--green); }
   .status-dot.error   { background: var(--red); }
