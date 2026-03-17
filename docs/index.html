@@ -237,16 +237,15 @@ function tenureDays(cnpj) {
 
 function cagrInception(f) {
   const meta = FUND_META[f.cnpjFmt];
-  if (!meta || !meta.inception) return f.cagrInception ?? null;
-  // Use hardcoded inception date with earliest CVM quota as base,
-  // but recalculate years using the real inception date
-  if (!f.cagrInception || !f.inceptionDate || !f.latestDate) return f.cagrInception ?? null;
-  const realYears = (new Date(f.latestDate) - new Date(meta.inception)) / (365.25 * 86400000);
-  const cvmYears  = (new Date(f.latestDate) - new Date(f.inceptionDate)) / (365.25 * 86400000);
-  if (cvmYears <= 0 || realYears <= 0) return f.cagrInception ?? null;
-  // Back-calculate the cumulative return from the CVM CAGR, then reannualize over real years
-  const cumReturn = Math.pow(1 + f.cagrInception / 100, cvmYears);
-  return (Math.pow(cumReturn, 1 / realYears) - 1) * 100;
+  if (!meta || !meta.inception || !f.latestDate) return f.cagrInception ?? null;
+  // Assume cota inicial R$ 1.00 on real inception date
+  // Use earliest CVM quota as the end-point base quota
+  const inceptionQuota = 1.0;
+  const latestQuota    = f.latestQuota;
+  if (!latestQuota) return f.cagrInception ?? null;
+  const years = (new Date(f.latestDate) - new Date(meta.inception)) / (365.25 * 86400000);
+  if (years <= 0) return null;
+  return (Math.pow(latestQuota / inceptionQuota, 1 / years) - 1) * 100;
 }
   if (key === 'tenure')    return tenureDays(f.cnpjFmt);
   if (key === 'inception') return cagrInception(f) ?? -Infinity;
