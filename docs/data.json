@@ -1,77 +1,149 @@
 {
-  "generatedAt": "2026-03-17T18:18:19.661676+00:00",
+  "generatedAt": "2026-03-17T18:22:58.969278+00:00",
   "funds": [
     {
       "name": "Tarpon GT FIF Cotas FIA",
-      "cnpjFmt": "22.232.927/0001-90",
       "cnpj": "22.232.927/0001-90",
-      "error": true
+      "cnpjFmt": "22.232.927/0001-90",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 9.58462131709803,
+      "cagr36": 26.636980640506103,
+      "cagr60": 19.955079251218997,
+      "cagrInception": 20.65860835097815,
+      "error": false
     },
     {
       "name": "Organon FIF Cotas FIA",
-      "cnpjFmt": "17.400.251/0001-66",
       "cnpj": "17.400.251/0001-66",
-      "error": true
+      "cnpjFmt": "17.400.251/0001-66",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 30.070321565312508,
+      "cagr36": 25.675329413553683,
+      "cagr60": 21.572523413684962,
+      "cagrInception": 25.961497847016112,
+      "error": false
     },
     {
       "name": "Artica Long Term FIA",
-      "cnpjFmt": "18.302.338/0001-63",
       "cnpj": "18.302.338/0001-63",
-      "error": true
+      "cnpjFmt": "18.302.338/0001-63",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 38.367575201903904,
+      "cagr36": 34.80176375226871,
+      "cagr60": 15.190828004475643,
+      "cagrInception": 15.737286303210919,
+      "error": false
     },
     {
       "name": "Genoa Capital Arpa CIC Classe FIM RL",
-      "cnpjFmt": "37.495.383/0001-26",
       "cnpj": "37.495.383/0001-26",
-      "error": true
+      "cnpjFmt": "37.495.383/0001-26",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-04-30",
+      "cagr12": 30.42288357003027,
+      "cagr36": 25.017191693085472,
+      "cagr60": null,
+      "cagrInception": 17.594438104229027,
+      "error": false
     },
     {
       "name": "Itaú Artax Ultra Multimercado FIF DA CIC RL",
-      "cnpjFmt": "42.698.666/0001-05",
       "cnpj": "42.698.666/0001-05",
-      "error": true
+      "cnpjFmt": "42.698.666/0001-05",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2022-05-31",
+      "cagr12": 29.930426496369968,
+      "cagr36": 19.78666878733255,
+      "cagr60": null,
+      "cagrInception": 19.69552331448501,
+      "error": false
     },
     {
       "name": "Guepardo Long Bias RV FIM",
-      "cnpjFmt": "24.623.392/0001-03",
       "cnpj": "24.623.392/0001-03",
-      "error": true
+      "cnpjFmt": "24.623.392/0001-03",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 38.661507053920886,
+      "cagr36": 25.84476479783713,
+      "cagr60": 17.151318584839515,
+      "cagrInception": 16.349900752438874,
+      "error": false
     },
     {
       "name": "Kapitalo Tarkus FIF Cotas FIA",
-      "cnpjFmt": "28.747.685/0001-53",
       "cnpj": "28.747.685/0001-53",
-      "error": true
+      "cnpjFmt": "28.747.685/0001-53",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 59.23570395074616,
+      "cagr36": 36.05626929771155,
+      "cagr60": 13.826094893994846,
+      "cagrInception": 12.60346926739373,
+      "error": false
     },
     {
       "name": "Real Investor FIC FIF Ações RL",
-      "cnpjFmt": "10.500.884/0001-05",
       "cnpj": "10.500.884/0001-05",
-      "error": true
+      "cnpjFmt": "10.500.884/0001-05",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 33.86686188682,
+      "cagr36": 24.355807448310742,
+      "cagr60": 13.649511423864258,
+      "cagrInception": 12.421285499420831,
+      "error": false
     },
     {
       "name": "Gama Schroder Gaia Contour Tech Equity L&S BRL FIF CIC Mult IE RL",
-      "cnpjFmt": "35.744.790/0001-02",
       "cnpj": "35.744.790/0001-02",
-      "error": true
+      "cnpjFmt": "35.744.790/0001-02",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 31.777007731092823,
+      "cagr36": 29.554064027402394,
+      "cagr60": 18.03551197211131,
+      "cagrInception": 17.920970730138784,
+      "error": false
     },
     {
       "name": "Patria Long Biased FIF Cotas FIM",
-      "cnpjFmt": "38.954.217/0001-03",
       "cnpj": "38.954.217/0001-03",
-      "error": true
+      "cnpjFmt": "38.954.217/0001-03",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 45.003162659515624,
+      "cagr36": 29.30102805186303,
+      "cagr60": 14.33536469152572,
+      "cagrInception": 16.329081516473476,
+      "error": false
     },
     {
       "name": "Absolute Pace Long Biased FIC FIF Ações RL",
-      "cnpjFmt": "32.073.525/0001-43",
       "cnpj": "32.073.525/0001-43",
-      "error": true
+      "cnpjFmt": "32.073.525/0001-43",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 32.465946293278215,
+      "cagr36": 20.536632857184767,
+      "cagr60": 15.812255323421521,
+      "cagrInception": 15.793204955565132,
+      "error": false
     },
     {
       "name": "Arbor FIC FIA",
-      "cnpjFmt": "21.689.246/0001-92",
       "cnpj": "21.689.246/0001-92",
-      "error": true
+      "cnpjFmt": "21.689.246/0001-92",
+      "latestDate": "2026-03-13",
+      "inceptionDate": "2021-01-04",
+      "cagr12": 23.17308344931366,
+      "cagr36": 27.42624197758572,
+      "cagr60": 9.540796820820452,
+      "cagrInception": 11.592527268590992,
+      "error": false
     }
   ]
 }
