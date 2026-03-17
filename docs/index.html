@@ -168,20 +168,20 @@
 <script>
 // ── Fund metadata ─────────────────────────────────────────────────────────────
 const FUND_META = {
-  "22.232.927/0001-90": { nome:"Tarpon GT",         inception:"2010-07-12", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"BTG",      obs:"" },
-  "17.400.251/0001-66": { nome:"Organon",            inception:"2013-02-18", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "18.302.338/0001-63": { nome:"Ártica Long Term",   inception:"2013-06-27", tipo:"Long Only",    trib:"RV", expo:"Majoritariamente Brasil",  banco:"BTG / C6", obs:"" },
-  "37.495.383/0001-26": { nome:"Genoa Arpa",         inception:"2021-04-30", tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"C6",       obs:"" },
-  "42.698.666/0001-05": { nome:"Artax Ultra",        inception:"2022-05-31", tipo:"Long Biased",  trib:"RV", expo:"Internacional",            banco:"Itaú",     obs:"Melhor versão: Itaú Artax Endurance (tributação RV)" },
-  "24.623.392/0001-03": { nome:"Guepardo Long Bias", inception:"2016-07-11", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "28.747.685/0001-53": { nome:"Kapitalo Tarkus",    inception:"2017-11-06", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"XP",       obs:"" },
-  "10.500.884/0001-05": { nome:"Real Investor",      inception:"2012-02-29", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "35.744.790/0001-02": { nome:"Schroder Tech L&S",  inception:"2020-04-01", tipo:"Multimercado", trib:"TR", expo:"Internacional",            banco:"BTG",      obs:"" },
-  "38.954.217/0001-03": { nome:"Pátria Long Biased", inception:"2020-10-30", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "32.073.525/0001-43": { nome:"Absolute Pace",      inception:"2018-12-27", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "21.689.246/0001-92": { nome:"Arbor",              inception:"2015-03-23", tipo:"Long Only",    trib:"RV", expo:"Internacional",            banco:"BTG",      obs:"" },
-  "14.438.229/0001-17": { nome:"Charles River",      inception:"2014-10-30", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"C6",       obs:"" },
-  "17.397.315/0001-17": { nome:"SPX Falcon",         inception:"2012-09-17", tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"Itaú",     obs:"" },
+  "22.232.927/0001-90": { nome:"Tarpon GT",         inception:"2010-07-12", initialQuota:1.2136, tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"BTG",      obs:"" },
+  "17.400.251/0001-66": { nome:"Organon",            inception:"2013-02-22", initialQuota:1.0000, tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "18.302.338/0001-63": { nome:"Ártica Long Term",   inception:"2013-06-27", initialQuota:0.7647, tipo:"Long Only",    trib:"RV", expo:"Majoritariamente Brasil",  banco:"BTG / C6", obs:"" },
+  "37.495.383/0001-26": { nome:"Genoa Arpa",         inception:"2021-04-30", initialQuota:1.0000, tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"C6",       obs:"" },
+  "42.698.666/0001-05": { nome:"Artax Ultra",        inception:"2022-05-31", initialQuota:1.0000, tipo:"Long Biased",  trib:"RV", expo:"Internacional",            banco:"Itaú",     obs:"Melhor versão: Itaú Artax Endurance (tributação RV)" },
+  "24.623.392/0001-03": { nome:"Guepardo Long Bias", inception:"2016-07-11", initialQuota:1.0000, tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "28.747.685/0001-53": { nome:"Kapitalo Tarkus",    inception:"2017-11-06", initialQuota:1.0000, tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"XP",       obs:"" },
+  "10.500.884/0001-05": { nome:"Real Investor",      inception:"2012-02-29", initialQuota:3.6300, tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "35.744.790/0001-02": { nome:"Schroder Tech L&S",  inception:"2020-04-01", initialQuota:1.0000, tipo:"Multimercado", trib:"TR", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "38.954.217/0001-03": { nome:"Pátria Long Biased", inception:"2020-10-30", initialQuota:1.0000, tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "32.073.525/0001-43": { nome:"Absolute Pace",      inception:"2018-12-27", initialQuota:1.0000, tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "21.689.246/0001-92": { nome:"Arbor",              inception:"2015-03-23", initialQuota:1.0000, tipo:"Long Only",    trib:"RV", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "14.438.229/0001-17": { nome:"Charles River",      inception:"2011-11-07", initialQuota:1.0000, tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"C6",       obs:"" },
+  "17.397.315/0001-17": { nome:"SPX Falcon",         inception:"2012-09-17", initialQuota:1.0000, tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"Itaú",     obs:"" },
 };
 const TRIB_LABEL = { RV:"Renda Variável", TR:"Tabela Regressiva" };
 
@@ -202,7 +202,7 @@ function toggleTheme() {
 // ── State ─────────────────────────────────────────────────────────────────────
 let funds        = [];
 let ibov         = { cagr12: null, cagr36: null, cagr60: null };
-let currentSort  = 'inception';
+let currentSort  = 'cagr36';
 let sortDir      = -1;
 let expandedCnpj = null;
 
@@ -238,9 +238,7 @@ function tenureDays(cnpj) {
 function cagrInception(f) {
   const meta = FUND_META[f.cnpjFmt];
   if (!meta || !meta.inception || !f.latestDate) return f.cagrInception ?? null;
-  // Assume cota inicial R$ 1.00 on real inception date
-  // Use earliest CVM quota as the end-point base quota
-  const inceptionQuota = 1.0;
+  const inceptionQuota = meta.initialQuota ?? 1.0;
   const latestQuota    = f.latestQuota;
   if (!latestQuota) return f.cagrInception ?? null;
   const years = (new Date(f.latestDate) - new Date(meta.inception)) / (365.25 * 86400000);
