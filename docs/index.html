@@ -247,6 +247,8 @@ function cagrInception(f) {
   if (years <= 0) return null;
   return (Math.pow(latestQuota / inceptionQuota, 1 / years) - 1) * 100;
 }
+
+function getSortVal(f, key) {
   if (key === 'tenure')    return tenureDays(f.cnpjFmt);
   if (key === 'inception') return cagrInception(f) ?? -Infinity;
   return f[key] ?? -Infinity;
