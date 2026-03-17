@@ -104,7 +104,7 @@
   /* ── Detail panel ── */
   .detail-panel { overflow: hidden; max-height: 0; transition: max-height 0.28s ease; background: var(--bg); }
   .detail-panel.open { max-height: 260px; }
-  .detail-inner { display: grid; grid-template-columns: 2fr repeat(4,1fr); padding: 0.9rem 1rem 1rem; border-top: 1px solid var(--border); gap: 0; }
+  .detail-inner { display: grid; grid-template-columns: 1fr 1fr repeat(4,1fr); padding: 0.9rem 1rem 1rem; border-top: 1px solid var(--border); gap: 0; }
   .ditem { padding-right: 0.8rem; }
   .dlabel { font-family: 'Courier New', monospace; font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 3px; }
   .dval   { font-size: 0.77rem; color: var(--text); line-height: 1.3; }
@@ -168,20 +168,20 @@
 <script>
 // ── Fund metadata ─────────────────────────────────────────────────────────────
 const FUND_META = {
-  "22.232.927/0001-90": { nome:"Tarpon GT",        tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"BTG",      obs:"" },
-  "17.400.251/0001-66": { nome:"Organon",           tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "18.302.338/0001-63": { nome:"Ártica Long Term",  tipo:"Long Only",    trib:"RV", expo:"Majoritariamente Brasil",  banco:"BTG / C6", obs:"" },
-  "37.495.383/0001-26": { nome:"Genoa Arpa",        tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"C6",       obs:"" },
-  "42.698.666/0001-05": { nome:"Artax Ultra",       tipo:"Long Biased",  trib:"RV", expo:"Internacional",            banco:"Itaú",     obs:"Melhor versão: Itaú Artax Endurance (tributação RV)" },
-  "24.623.392/0001-03": { nome:"Guepardo Long Bias",tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "28.747.685/0001-53": { nome:"Kapitalo Tarkus",   tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"XP",       obs:"" },
-  "10.500.884/0001-05": { nome:"Real Investor",     tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "35.744.790/0001-02": { nome:"Schroder Tech L&S", tipo:"Multimercado", trib:"TR", expo:"Internacional",            banco:"BTG",      obs:"" },
-  "38.954.217/0001-03": { nome:"Pátria Long Biased",tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "32.073.525/0001-43": { nome:"Absolute Pace",     tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
-  "21.689.246/0001-92": { nome:"Arbor",             tipo:"Long Only",    trib:"RV", expo:"Internacional",            banco:"BTG",      obs:"" },
-  "14.438.229/0001-17": { nome:"Charles River",     tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"C6",       obs:"" },
-  "17.397.315/0001-17": { nome:"SPX Falcon",        tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"Itaú",     obs:"" },
+  "22.232.927/0001-90": { nome:"Tarpon GT",         inception:"2010-07-12", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"BTG",      obs:"" },
+  "17.400.251/0001-66": { nome:"Organon",            inception:"2013-02-18", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "18.302.338/0001-63": { nome:"Ártica Long Term",   inception:"2013-06-27", tipo:"Long Only",    trib:"RV", expo:"Majoritariamente Brasil",  banco:"BTG / C6", obs:"" },
+  "37.495.383/0001-26": { nome:"Genoa Arpa",         inception:"2021-04-30", tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"C6",       obs:"" },
+  "42.698.666/0001-05": { nome:"Artax Ultra",        inception:"2022-05-31", tipo:"Long Biased",  trib:"RV", expo:"Internacional",            banco:"Itaú",     obs:"Melhor versão: Itaú Artax Endurance (tributação RV)" },
+  "24.623.392/0001-03": { nome:"Guepardo Long Bias", inception:"2016-07-11", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "28.747.685/0001-53": { nome:"Kapitalo Tarkus",    inception:"2017-11-06", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"XP",       obs:"" },
+  "10.500.884/0001-05": { nome:"Real Investor",      inception:"2012-02-29", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "35.744.790/0001-02": { nome:"Schroder Tech L&S",  inception:"2020-04-01", tipo:"Multimercado", trib:"TR", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "38.954.217/0001-03": { nome:"Pátria Long Biased", inception:"2020-10-30", tipo:"Long Biased",  trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "32.073.525/0001-43": { nome:"Absolute Pace",      inception:"2018-12-27", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"Itaú",     obs:"" },
+  "21.689.246/0001-92": { nome:"Arbor",              inception:"2015-03-23", tipo:"Long Only",    trib:"RV", expo:"Internacional",            banco:"BTG",      obs:"" },
+  "14.438.229/0001-17": { nome:"Charles River",      inception:"2014-10-30", tipo:"Long Only",    trib:"RV", expo:"Brasil",                  banco:"C6",       obs:"" },
+  "17.397.315/0001-17": { nome:"SPX Falcon",         inception:"2012-09-17", tipo:"Long Biased",  trib:"RV", expo:"Majoritariamente Brasil",  banco:"Itaú",     obs:"" },
 };
 const TRIB_LABEL = { RV:"Renda Variável", TR:"Tabela Regressiva" };
 
@@ -214,7 +214,9 @@ function fmtPct(v) {
   return `<span class="cagr-val ${v >= 0 ? 'pos' : 'neg'}">${sign}${v.toFixed(2)}%</span>`;
 }
 
-function fmtTenure(d) {
+function fmtTenure(cnpj) {
+  const meta = FUND_META[cnpj];
+  const d = meta && meta.inception ? meta.inception : null;
   if (!d) return '<span class="tenure">—</span>';
   const start = new Date(d + 'T00:00:00'), today = new Date();
   let years  = today.getFullYear() - start.getFullYear();
@@ -223,15 +225,31 @@ function fmtTenure(d) {
   if (months < 0) { years--; months += 12; }
   const parts = [];
   if (years  > 0) parts.push(years  + ' ano'  + (years  !== 1 ? 's' : ''));
-  if (months > 0) parts.push(months + ' mês'  + (months !== 1 ? 'es' : ''));
-  return `<span class="tenure">${parts.join(' e ') || '< 1 mês'}</span>`;
+  if (months > 0) parts.push(months + ' mes'  + (months !== 1 ? 'es' : ''));
+  return `<span class="tenure">${parts.join(' e ') || '< 1 mes'}</span>`;
 }
 
-function tenureDays(d) { return d ? (new Date() - new Date(d + 'T00:00:00')) / 86400000 : 0; }
+function tenureDays(cnpj) {
+  const meta = FUND_META[cnpj];
+  const d = meta && meta.inception ? meta.inception : null;
+  return d ? (new Date() - new Date(d + 'T00:00:00')) / 86400000 : 0;
+}
 
-function getSortVal(f, key) {
-  if (key === 'tenure')    return tenureDays(f.inceptionDate);
-  if (key === 'inception') return f.cagrInception ?? -Infinity;
+function cagrInception(f) {
+  const meta = FUND_META[f.cnpjFmt];
+  if (!meta || !meta.inception) return f.cagrInception ?? null;
+  // Use hardcoded inception date with earliest CVM quota as base,
+  // but recalculate years using the real inception date
+  if (!f.cagrInception || !f.inceptionDate || !f.latestDate) return f.cagrInception ?? null;
+  const realYears = (new Date(f.latestDate) - new Date(meta.inception)) / (365.25 * 86400000);
+  const cvmYears  = (new Date(f.latestDate) - new Date(f.inceptionDate)) / (365.25 * 86400000);
+  if (cvmYears <= 0 || realYears <= 0) return f.cagrInception ?? null;
+  // Back-calculate the cumulative return from the CVM CAGR, then reannualize over real years
+  const cumReturn = Math.pow(1 + f.cagrInception / 100, cvmYears);
+  return (Math.pow(cumReturn, 1 / realYears) - 1) * 100;
+}
+  if (key === 'tenure')    return tenureDays(f.cnpjFmt);
+  if (key === 'inception') return cagrInception(f) ?? -Infinity;
   return f[key] ?? -Infinity;
 }
 
@@ -318,8 +336,8 @@ function render() {
       <td>${fmtPct(f.cagr12)}</td>
       <td>${fmtPct(f.cagr36)}</td>
       <td>${fmtPct(f.cagr60)}</td>
-      <td>${fmtPct(f.cagrInception)}</td>
-      <td>${fmtTenure(f.inceptionDate)}</td>
+      <td>${fmtPct(cagrInception(f))}</td>
+      <td>${fmtTenure(f.cnpjFmt)}</td>
     </tr>
     <tr class="detail-row"><td colspan="6">
       <div class="detail-panel ${isExp?'open':''}" id="detail-${id}">
@@ -327,6 +345,10 @@ function render() {
           <div class="ditem">
             <div class="dlabel">Nome completo</div>
             <div class="dval" style="font-size:0.72rem">${f.name}</div>
+          </div>
+          <div class="ditem">
+            <div class="dlabel">Início</div>
+            <div class="dval">${meta.inception ? meta.inception.split('-').reverse().join('/') : '—'}</div>
           </div>
           <div class="ditem">
             <div class="dlabel">Tipo</div>
