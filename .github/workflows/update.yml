@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
 
       - name: Fetch CVM data and generate data.json
-        run: python scripts/fetch_data.py
+        run: python scripts/debug_tarpon.py
 
       - name: Commit updated data.json
         run: |
