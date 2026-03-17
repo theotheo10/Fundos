@@ -103,30 +103,27 @@
   .detail-panel { overflow: hidden; max-height: 0; transition: max-height 0.35s ease; }
   .detail-panel.open { max-height: 400px; }
 
-  .detail-inner { border-top: 2px solid var(--accent); }
-
-  .detail-section-header {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    padding: 0.7rem 1.2rem 0.4rem;
-    font-family: 'Courier New', monospace; font-size: 0.6rem;
-    text-transform: uppercase; letter-spacing: 0.12em;
-    color: var(--accent); font-weight: bold;
-    border-bottom: 1px solid var(--border);
+  .detail-inner {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    border-top: 2px solid var(--accent);
   }
 
-  .drow {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    border-bottom: 1px solid var(--border);
-  }
-  .drow:last-child { border-bottom: none; }
-
-  .dcell {
-    padding: 0.45rem 1.2rem;
+  .detail-col {
+    padding: 0.9rem 1.2rem;
     border-right: 1px solid var(--border);
   }
-  .dcell:last-child { border-right: none; }
+  .detail-col:last-child { border-right: none; }
 
-  .dlabel { font-family: 'Courier New', monospace; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 1px; }
+  .detail-col-header {
+    font-family: 'Courier New', monospace;
+    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--accent); margin-bottom: 0.8rem; font-weight: bold;
+  }
+
+  .ditem { margin-bottom: 0.6rem; }
+  .ditem:last-child { margin-bottom: 0; }
+  .dlabel { font-family: 'Courier New', monospace; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 2px; }
   .dval   { font-size: 0.82rem; color: var(--text); line-height: 1.3; }
   .dnote  { font-family: 'Courier New', monospace; font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
 
@@ -134,6 +131,8 @@
   .tag-rv  { border: 0.5px solid var(--green); color: var(--green); background: var(--green-light); }
   .tag-tr  { border: 0.5px solid var(--amber); color: var(--amber); background: var(--amber-light); }
 
+  .perf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem 1rem; }
+  .perf-label { font-family: 'Courier New', monospace; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 2px; }
   .perf-val   { font-family: 'Courier New', monospace; font-size: 1.05rem; font-weight: bold; line-height: 1; }
   .perf-val.pos { color: var(--green); }
   .perf-val.neg { color: var(--red); }
@@ -325,46 +324,48 @@ function buildDetailPanel(f, isExp) {
   const inception = meta.inception ? meta.inception.split('-').reverse().join('/') : '—';
   const tenure = fmtTenure(f.cnpjFmt).replace(/<[^>]+>/g,'');
 
-  const rows = [
-    [
-      { label:'12 meses',      val: fmtPctLarge(f.cagr12) },
-      { label:'Nome',          val: `<span style="font-size:0.74rem">${f.name}</span>` },
-      { label:'Início',        val: `${inception} · ${tenure}` },
-    ],
-    [
-      { label:'36 meses',      val: fmtPctLarge(f.cagr36) },
-      { label:'Tipo',          val: meta.tipo || '—' },
-      { label:'Tributação',    val: `${TRIB_LABEL[meta.trib] || meta.trib || '—'} <span class="tag ${tribClass}">${meta.trib || '—'}</span>` },
-    ],
-    [
-      { label:'60 meses',      val: fmtPctLarge(f.cagr60) },
-      { label:'Exposição',     val: meta.expo || '—' },
-      { label:'Melhor banco',  val: meta.banco || '—' + (meta.obs ? `<div class="dnote">${meta.obs}</div>` : '') },
-    ],
-    [
-      { label:'Desde o início',val: fmtPctLarge(cagrInception(f)) },
-      { label:'',              val: '' },
-      { label:'',              val: meta.obs ? `<div class="dnote" style="margin-top:0">${meta.obs}</div>` : '' },
-    ],
-  ];
-
-  const rowsHtml = rows.map(cols => `
-    <div class="drow">
-      ${cols.map(c => `
-        <div class="dcell">
-          ${c.label ? `<div class="dlabel">${c.label}</div>` : ''}
-          ${c.val   ? `<div class="dval">${c.val}</div>` : ''}
-        </div>`).join('')}
-    </div>`).join('');
-
   return `<div class="detail-panel ${isExp ? 'open' : ''}" id="detail-${id}">
     <div class="detail-inner">
-      <div class="detail-section-header">
-        <span>Performance CAGR</span>
-        <span>Sobre o fundo</span>
-        <span>Acesso</span>
+
+      <div class="detail-col">
+        <div class="detail-col-header">Performance CAGR</div>
+        <div class="perf-grid">
+          <div><div class="perf-label">12 meses</div>${fmtPctLarge(f.cagr12)}</div>
+          <div><div class="perf-label">36 meses</div>${fmtPctLarge(f.cagr36)}</div>
+          <div><div class="perf-label">60 meses</div>${fmtPctLarge(f.cagr60)}</div>
+          <div><div class="perf-label">Desde o início</div>${fmtPctLarge(cagrInception(f))}</div>
+        </div>
       </div>
-      ${rowsHtml}
+
+      <div class="detail-col">
+        <div class="detail-col-header">Sobre o fundo</div>
+        <div class="ditem">
+          <div class="dlabel">Nome</div>
+          <div class="dval" style="font-size:0.76rem">${f.name}</div>
+        </div>
+        <div class="ditem">
+          <div class="dlabel">Tipo · Exposição</div>
+          <div class="dval">${meta.tipo || '—'} · ${meta.expo || '—'}</div>
+        </div>
+      </div>
+
+      <div class="detail-col">
+        <div class="detail-col-header">Acesso</div>
+        <div class="ditem">
+          <div class="dlabel">Início · Track record</div>
+          <div class="dval">${inception} · ${tenure}</div>
+        </div>
+        <div class="ditem">
+          <div class="dlabel">Tributação</div>
+          <div class="dval">${TRIB_LABEL[meta.trib] || meta.trib || '—'} <span class="tag ${tribClass}">${meta.trib || '—'}</span></div>
+        </div>
+        <div class="ditem">
+          <div class="dlabel">Melhor banco</div>
+          <div class="dval">${meta.banco || '—'}</div>
+          ${meta.obs ? `<div class="dnote">${meta.obs}</div>` : ''}
+        </div>
+      </div>
+
     </div>
   </div>`;
 }
