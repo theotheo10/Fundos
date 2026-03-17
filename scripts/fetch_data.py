@@ -286,17 +286,93 @@ def process_fund(fund, anchor):
     return result
 
 
+def fetch_ibov(anchor: datetime.date, a12: datetime.date, a36: datetime.date, a60: datetime.date):
+    """Fetch IBOVESPA historical prices from Yahoo Finance and compute CAGRs."""
+    ticker = "%5EBVSP"
+    period1 = int((datetime.datetime.combine(a60 - datetime.timedelta(days=10), datetime.time()) 
+                   .replace(tzinfo=datetime.timezone.utc)).timestamp())
+    period2 = int((datetime.datetime.combine(anchor + datetime.timedelta(days=5), datetime.time())
+                   .replace(tzinfo=datetime.timezone.utc)).timestamp())
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&period1={period1}&period2={period2}"
+
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json",
+        })
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read())
+
+        result  = data["chart"]["result"][0]
+        timestamps = result["timestamp"]
+        closes     = result["indicators"]["quote"][0]["close"]
+
+        price_map = {}
+        for ts, price in zip(timestamps, closes):
+            if price is not None:
+                d = datetime.datetime.utcfromtimestamp(ts).date().isoformat()
+                price_map[d] = price
+
+        dates = sorted(price_map.keys())
+
+        def best_price(target: datetime.date):
+            tstr = target.isoformat()
+            candidates = [d for d in dates if d <= tstr]
+            return price_map[candidates[-1]] if candidates else None
+
+        def ibov_cagr(start_date, end_date, p_start, p_end):
+            if not p_start or not p_end:
+                return None
+            yrs = (datetime.date.fromisoformat(end_date) - datetime.date.fromisoformat(start_date)).days / 365.25
+            return cagr(p_start, p_end, yrs)
+
+        p_anchor = best_price(anchor)
+        p12      = best_price(a12)
+        p36      = best_price(a36)
+        p60      = best_price(a60)
+
+        # Use actual dates found for precision
+        def actual_date(target):
+            tstr = target.isoformat()
+            candidates = [d for d in dates if d <= tstr]
+            return candidates[-1] if candidates else None
+
+        d_anchor = actual_date(anchor)
+        d12      = actual_date(a12)
+        d36      = actual_date(a36)
+        d60      = actual_date(a60)
+
+        result_ibov = {
+            "cagr12": ibov_cagr(d12,  d_anchor, p12,  p_anchor) if d12  else None,
+            "cagr36": ibov_cagr(d36,  d_anchor, p36,  p_anchor) if d36  else None,
+            "cagr60": ibov_cagr(d60,  d_anchor, p60,  p_anchor) if d60  else None,
+        }
+        print(f"  IBOV 12M={result_ibov['cagr12']:.2f}% 36M={result_ibov['cagr36']:.2f}% 60M={result_ibov['cagr60']:.2f}%")
+        return result_ibov
+    except Exception as e:
+        print(f"  ✗ IBOV fetch failed: {e}")
+        return {"cagr12": None, "cagr36": None, "cagr60": None}
+
+
 def main():
     today = datetime.date.today()
     print(f"Running for {today.isoformat()}")
 
     anchor = find_anchor_date(today.year, today.month)
+    a12 = subtract_months(anchor, 12)
+    a36 = subtract_months(anchor, 36)
+    a60 = subtract_months(anchor, 60)
+
     results = [process_fund(f, anchor) for f in FUNDS]
+
+    print(f"\n── Ibovespa")
+    ibov = fetch_ibov(anchor, a12, a36, a60)
 
     output = {
         "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "anchorDate":  anchor.isoformat(),
-        "funds": results,
+        "ibov":        ibov,
+        "funds":       results,
     }
 
     out_path = Path(__file__).parent.parent / "docs" / "data.json"
