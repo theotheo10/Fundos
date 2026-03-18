@@ -494,9 +494,23 @@
   }
   .ir-trib-rv { border: 0.5px solid var(--green); color: var(--green); background: var(--green-light); }
   .ir-trib-tr { border: 0.5px solid var(--amber); color: var(--amber); background: var(--amber-light); }
-  .ir-note {
-    font-family: 'Courier New', monospace; font-size: 0.6rem;
-    color: var(--muted); padding: 0.6rem 1rem 0.8rem; line-height: 1.6;
+  .ir-legend {
+    display: flex; gap: 0.5rem; padding: 0.7rem 1rem 0.9rem;
+    flex-wrap: wrap;
+  }
+  .ir-pill {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: 'Courier New', monospace; font-size: 0.62rem;
+    padding: 3px 9px; border-radius: 20px; cursor: default;
+    border: 1px solid var(--border); color: var(--muted);
+    transition: border-color 0.15s, color 0.15s;
+    user-select: none;
+  }
+  .ir-pill:hover { border-color: var(--text); color: var(--text); }
+  .ir-pill .ir-pill-icon { font-size: 0.58rem; opacity: 0.7; }
+  .ir-pill:hover .ir-custo-tip {
+    opacity: 1; pointer-events: auto; transform: translateY(0);
   }
   @media (max-width: 900px) {
     .port-layout { grid-template-columns: 1fr; }
@@ -1619,31 +1633,62 @@ function renderIR() {
       continue;
     }
 
-    const rendPct  = row.aporte > 0 ? ((row.valorBruto / row.aporte - 1) * 100) : 0;
     html += `<tr>
       <td>${row.nome}${tribBadge}</td>
       <td class="ir-val-pos">+${row.retorno.toFixed(1)}%</td>
       <td>${fmtBRL(row.aporte)}</td>
       <td>${fmtBRL(row.valorBruto)}</td>
       <td class="ir-val-neg">
-        <span style="display:block">${fmtBRL(row.irTotal)}</span>
-        ${row.irComeCotas > 0 ? `<span class="ir-custo-real">cc: ${fmtBRL(row.irComeCotas)}</span>` : ''}
-        ${row.irResgate   > 0 ? `<span class="ir-custo-real">res: ${fmtBRL(row.irResgate)}</span>` : ''}
+        ${row.trib === 'TR' && (row.irComeCotas > 0 || row.irResgate > 0)
+          ? `<div class="ir-custo-cell">
+               <span style="display:block">${fmtBRL(row.irTotal)}</span>
+               <div class="ir-custo-tip">
+                 <strong>Come-cotas (antecipações em mai/nov)</strong><br>
+                 ${row.irComeCotas > 0 ? fmtBRL(row.irComeCotas) : 'nenhum no período'}<br>
+                 Pago ao longo do tempo, sobre cada período semestral.<br>
+                 A alíquota é sempre 15% — mas o capital pago deixa de crescer.<br>
+                 <br>
+                 <strong>IR no resgate (último trecho)</strong><br>
+                 ${row.irResgate > 0 ? fmtBRL(row.irResgate) : 'zero — trecho final coincidiu com come-cotas'}<br>
+                 Sobre o rendimento entre o último come-cotas e o resgate.<br>
+                 Alíquota: 15% (prazo > 720 dias).
+               </div>
+             </div>`
+          : `<span>${fmtBRL(row.irTotal)}</span>`
+        }
       </td>
       <td>
         ${row.trib === 'RV'
-          ? `<span class="ir-val-neg" style="font-family:'Courier New',monospace">${fmtPctIr(row.aliqEfetiva)}</span>
-             <span class="ir-custo-real">(= s/ rend. real)</span>`
+          ? `<div class="ir-custo-cell">
+               <span class="ir-val-neg" style="font-family:'Courier New',monospace;font-weight:bold">${fmtPctIr(row.aliqEconomica)}</span>
+               <div class="ir-custo-tip">
+                 <strong>O que significa este número?</strong><br>
+                 De cada R$&nbsp;100 que esse fundo poderia ter rendido<br>
+                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco<br>
+                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.<br>
+                 <br>
+                 Para fundos RV sem come-cotas, isso equivale<br>
+                 exatamente à alíquota aplicada: 15%.
+               </div>
+             </div>`
           : `<div class="ir-custo-cell">
                <span class="ir-custo-eco ir-val-neg">${fmtPctIr(row.aliqEconomica)}</span>
-               <span class="ir-custo-real">${fmtPctIr(row.aliqEfetiva)} s/ rend. real</span>
                <div class="ir-custo-tip">
-                 De cada R$&nbsp;100 que esse fundo poderia ter rendido sem nenhum imposto,<br>
-                 R$&nbsp;${fmtPctIr(row.aliqEconomica).replace('%','')} foram para o fisco — R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.<br>
+                 <strong>O que significa este número?</strong><br>
+                 De cada R$&nbsp;100 que esse fundo poderia ter rendido<br>
+                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco<br>
+                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.<br>
                  <br>
-                 Inclui tanto o IR efetivamente pago (${fmtPctIr(row.aliqEfetiva)}) quanto<br>
-                 o custo de oportunidade do come-cotas antecipado.<br>
-                 Base comparável com fundos RV (que pagam 15%).
+                 <strong>Por que é maior que 15%?</strong><br>
+                 O come-cotas antecipa IR a cada semestre. O capital<br>
+                 pago ao fisco deixa de crescer nos anos seguintes —<br>
+                 esse custo de oportunidade é invisível mas real.<br>
+                 Quanto maior o prazo e o retorno, maior o impacto.<br>
+                 <br>
+                 <strong>Compare com fundos RV:</strong> sem come-cotas,<br>
+                 todo o capital cresce até o resgate e só então<br>
+                 paga 15%. Por isso RV sempre mostra 15% aqui,<br>
+                 independente do prazo.
                </div>
              </div>`
         }
@@ -1658,24 +1703,40 @@ function renderIR() {
 
   // Linha de total
   const totRendPct = totAporte > 0 ? ((totBruto / totAporte - 1) * 100) : 0;
+  const totCustoEco = totRendPot > 0 ? (1 - totRend / totRendPot) * 100 : 0;
   html += `<tr class="ir-total-row">
     <td>Total portfólio</td>
     <td>—</td>
     <td>${fmtBRL(totAporte)}</td>
     <td>${fmtBRL(totBruto)}</td>
     <td class="ir-val-neg">
-      <span style="display:block">${fmtBRL(totTotal)}</span>
-      ${totCC      > 0 ? `<span class="ir-custo-real">cc: ${fmtBRL(totCC)}</span>`      : ''}
-      ${totResgate > 0 ? `<span class="ir-custo-real">res: ${fmtBRL(totResgate)}</span>` : ''}
+      ${totCC > 0
+        ? `<div class="ir-custo-cell">
+             <span style="display:block">${fmtBRL(totTotal)}</span>
+             <div class="ir-custo-tip">
+               <strong>Come-cotas (antecipações)</strong><br>
+               ${fmtBRL(totCC)}<br>
+               Soma de todos os come-cotas pagos pelos fundos TR.<br>
+               <br>
+               <strong>IR no resgate</strong><br>
+               ${totResgate > 0 ? fmtBRL(totResgate) : 'zero'}
+             </div>
+           </div>`
+        : `<span>${fmtBRL(totTotal)}</span>`
+      }
     </td>
     <td>
       <div class="ir-custo-cell">
-        <span class="ir-custo-eco ir-val-neg">${fmtPctIr(totRendPot > 0 ? (1 - totRend/totRendPot)*100 : 0)}</span>
-        <span class="ir-custo-real">${fmtPctIr(totAliqEf)} s/ rend. real</span>
+        <span class="ir-custo-eco ir-val-neg">${fmtPctIr(totCustoEco)}</span>
         <div class="ir-custo-tip">
-          De cada R$&nbsp;100 de potencial do portfólio,<br>
-          ${fmtPctIr(totRendPot > 0 ? (1 - totRend/totRendPot)*100 : 0).replace('%','')} foram para o fisco.<br>
-          Média ponderada pelos aportes de cada fundo.
+          <strong>Custo fiscal do portfólio</strong><br>
+          De cada R$&nbsp;100 de potencial deste portfólio,<br>
+          R$&nbsp;${totCustoEco.toFixed(1)} foram para o fisco.<br>
+          <br>
+          É a média ponderada pelo aporte de cada fundo.<br>
+          Fundos RV sempre contribuem com 15%;<br>
+          fundos TR contribuem com mais, dependendo<br>
+          do prazo e do retorno (quanto maior, pior o come-cotas).
         </div>
       </div>
     </td>
@@ -1687,10 +1748,65 @@ function renderIR() {
   </tr>`;
 
   html += `</tbody></table></div>
-  <div class="ir-note">
-    RV: 15% no resgate, sem come-cotas. &nbsp;·&nbsp;
-    TR: come-cotas de 15% em mai/nov + alíquota complementar no resgate (≤180d 22,5% · ≤360d 20% · ≤720d 17,5% · &gt;720d 15%). &nbsp;·&nbsp;
-    IR total = cc + resgate. &nbsp;·&nbsp; Projeção via retorno alvo de cada fundo.
+  <div class="ir-legend">
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> RV
+      <div class="ir-custo-tip">
+        <strong>Renda Variável — tributação no resgate</strong><br>
+        Sem come-cotas. O capital cresce integralmente até o resgate.<br>
+        No dia do resgate: 15% sobre o rendimento total.<br>
+        <br>
+        Resultado: a base de cálculo do IR é máxima,<br>
+        mas todo o capital trabalhou por mais tempo.
+      </div>
+    </div>
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> TR
+      <div class="ir-custo-tip">
+        <strong>Tabela Regressiva — come-cotas semestral</strong><br>
+        Em maio e novembro de cada ano, 15% sobre o rendimento<br>
+        do período é antecipado ao fisco. O capital pago deixa<br>
+        de crescer nos anos seguintes.<br>
+        <br>
+        No resgate, o trecho desde o último come-cotas paga:<br>
+        ≤ 180 dias → 22,5% &nbsp;·&nbsp; ≤ 360d → 20%<br>
+        ≤ 720 dias → 17,5% &nbsp;·&nbsp; &gt; 720d → 15%<br>
+        <br>
+        Quanto maior o prazo e o retorno, maior o custo<br>
+        invisível do come-cotas antecipado.
+      </div>
+    </div>
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> Custo fiscal
+      <div class="ir-custo-tip">
+        <strong>O que é o custo fiscal?</strong><br>
+        De cada R$&nbsp;100 que o fundo poderia ter rendido<br>
+        sem nenhum imposto, quanto foi para o fisco?<br>
+        <br>
+        Inclui o IR efetivamente pago <em>e</em> o custo de<br>
+        oportunidade do capital antecipado via come-cotas.<br>
+        <br>
+        RV sempre mostra 15% — é a alíquota exata aplicada.<br>
+        TR mostra mais: o come-cotas destrói rendimento<br>
+        composto, e esse custo cresce com o prazo.
+      </div>
+    </div>
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> Ret. alvo
+      <div class="ir-custo-tip">
+        <strong>Como é calculado o retorno alvo?</strong><br>
+        Média ponderada dos CAGRs históricos do fundo,<br>
+        onde o peso de cada período = sua duração em anos.<br>
+        <br>
+        12M → peso 1 &nbsp;·&nbsp; 36M → peso 3 &nbsp;·&nbsp; 60M → peso 5<br>
+        Inception → peso = anos desde o início (se &gt; 5,5a)<br>
+        <br>
+        Racional: períodos mais longos têm menor ruído<br>
+        amostral e recebem maior credibilidade estatística.<br>
+        <br>
+        É uma estimativa — não uma garantia de retorno futuro.
+      </div>
+    </div>
   </div>`;
 
   el.className = '';
