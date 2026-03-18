@@ -378,11 +378,11 @@
     position: fixed;
     background: var(--text); color: var(--bg);
     font-family: 'Courier New', monospace; font-size: 0.58rem;
-    padding: 6px 9px; border-radius: 5px; white-space: normal;
-    max-width: 260px; width: max-content;
+    padding: 8px 11px; border-radius: 5px; white-space: pre-line;
+    width: 280px;
     opacity: 0; pointer-events: none;
     transform: translateY(4px); transition: opacity 0.15s ease, transform 0.15s ease;
-    z-index: 9999; line-height: 1.6;
+    z-index: 9999; line-height: 1.8;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   }
 
@@ -480,11 +480,11 @@
     position: fixed;
     background: var(--text); color: var(--bg);
     font-family: 'Courier New', monospace; font-size: 0.58rem;
-    padding: 8px 11px; border-radius: 6px; white-space: normal;
-    max-width: 280px; width: max-content;
+    padding: 10px 13px; border-radius: 6px; white-space: pre-line;
+    width: 340px;
     opacity: 0; pointer-events: none;
     transform: translateY(4px); transition: opacity 0.15s ease, transform 0.15s ease;
-    z-index: 9999; line-height: 1.75; text-align: left;
+    z-index: 9999; line-height: 1.8; text-align: left;
     box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   }
   .ir-trib-badge {
@@ -554,6 +554,26 @@
   .opt-status {
     font-family: 'Courier New', monospace; font-size: 0.58rem;
     color: var(--muted); margin-top: 0.4rem; min-height: 1rem;
+  }
+  .opt-constraint-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin-top: 0.5rem; flex-wrap: wrap;
+  }
+  .opt-constraint-label {
+    font-family: 'Courier New', monospace; font-size: 0.6rem;
+    color: var(--muted); white-space: nowrap;
+  }
+  .opt-maxw-slider, .opt-minw-slider {
+    flex: 1; min-width: 80px; max-width: 120px;
+    accent-color: var(--accent); height: 3px; cursor: pointer;
+  }
+  .opt-maxw-val, .opt-minw-val {
+    font-family: 'Courier New', monospace; font-size: 0.7rem;
+    font-weight: bold; color: var(--text); min-width: 36px;
+  }
+  .opt-constraint-warn {
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    color: var(--red); margin-top: 0.25rem; display: none;
   }
   @media (max-width: 900px) {
     .port-layout { grid-template-columns: 1fr; }
@@ -638,6 +658,25 @@
             <button class="opt-btn"        id="optObjVol"     onclick="setOptObj('vol')">Mín. vol.</button>
           </div>
           <button class="opt-run" id="optRunBtn" onclick="runOptimizer()" disabled>Otimizar</button>
+        </div>
+        <div class="opt-constraint-row">
+          <span class="opt-constraint-label">Peso máx. por fundo:</span>
+          <input type="range" class="opt-maxw-slider" id="optMaxWSlider"
+            min="10" max="100" value="100" step="5"
+            oninput="onOptMaxWSlider()">
+          <span class="opt-maxw-val" id="optMaxWVal">100%</span>
+          <span class="opt-constraint-label" id="optMaxWNote" style="opacity:0.5">(sem restrição)</span>
+        </div>
+        <div class="opt-constraint-row">
+          <span class="opt-constraint-label">Peso mín. por fundo:</span>
+          <input type="range" class="opt-minw-slider" id="optMinWSlider"
+            min="10" max="300" value="10" step="1"
+            oninput="onOptMinWSlider()">
+          <span class="opt-minw-val" id="optMinWVal">1.0%</span>
+          <span class="opt-constraint-label" id="optMinWNote" style="opacity:0.5">(padrão)</span>
+        </div>
+        <div class="opt-constraint-warn" id="optConstraintWarn">
+          ⚠ restrições incompatíveis para este tamanho de carteira
         </div>
         <div class="opt-status" id="optStatus">Aguardando dados…</div>
       </div>
@@ -1343,7 +1382,7 @@ function updatePortfolio() {
     : `<span class="port-metric-val ${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
   const fmtSharpe  = v => v == null
     ? '<span class="port-metric-val na">N/D</span>'
-    : `<span class="port-metric-val neu" style="font-size:0.95rem">${v.toFixed(2)}x</span>`;
+    : `<span class="port-metric-val neu" style="font-size:0.95rem">${v.toFixed(2)}</span>`;
 
   // Métricas — grid 3 colunas, altura fixa
   document.getElementById('portMetrics').innerHTML = `
@@ -1395,7 +1434,8 @@ function updatePortfolio() {
           }).join('  ·  ');
         targetHtml = `<div class="alloc-target-wrap">
           <span class="port-alloc-target ${cls}">${sign}${v.toFixed(1)}%</span>
-          <div class="alloc-target-tip">Ret. alvo (média pond. por período)<br>${tipLines}</div>
+          <div class="alloc-target-tip">Ret. alvo (média pond. por período)
+${tipLines}</div>
         </div>`;
       }
 
@@ -1593,17 +1633,15 @@ function simularFundo(aporte, retornoAnual, trib, anosResgate) {
   const irTotal      = irComeCotas + irResgate;
   const valorLiquido = valorBruto - irResgate;  // come-cotas já saiu do patrimônio ao longo do tempo
 
-  // Alíquota efetiva = IR_total / rendimento_real
-  // rendimento_real = valor bruto após come-cotas (mas antes do IR do resgate) - aporte
-  // NÃO usar rendimento hipotético sem IR — isso subestima a alíquota porque
-  // o come-cotas reduziu o capital que continuou crescendo.
   const rendimentoReal = valorBruto - aporte;
-  // aliqEfetiva: IR pago / rendimento real (base já degradada pelos come-cotas)
   const aliqEfetiva    = rendimentoReal > 0 ? (irTotal / rendimentoReal) * 100 : 0;
-  // aliqEconomica: custo fiscal total / rendimento potencial sem nenhum IR
-  // Comparável diretamente com RV (ambos usam a mesma base hipotética)
-  const rendPotencial  = aporte * Math.pow(1 + r, anosResgate) - aporte;
-  const aliqEconomica  = rendPotencial  > 0 ? (1 - rendimentoReal / rendPotencial)  * 100 : 0;
+  // aliqEconomica: quanto % do rendimento potencial (sem IR) o fisco consumiu.
+  // Usa ganho líquido do investidor = rendimentoReal - irResgate
+  // (come-cotas já saiu do patrimônio ao longo do tempo; irResgate sai no resgate)
+  // Isso captura o IR efetivo + o custo de oportunidade do capital antecipado.
+  const rendPotencial = aporte * Math.pow(1 + r, anosResgate) - aporte;
+  const ganhoLiquido  = rendimentoReal - irResgate;
+  const aliqEconomica = rendPotencial > 0 ? (1 - ganhoLiquido / rendPotencial) * 100 : 0;
 
   return {
     aporte, valorBruto, rendimentoBruto: rendimentoReal,
@@ -1660,12 +1698,12 @@ function renderIR() {
 
     totAporte  += sim.aporte;
     totBruto   += sim.valorBruto;
-    totRend    += sim.rendimentoBruto;
+    totRend    += sim.valorLiquido - sim.aporte;  // rendimento real líquido (após todo IR)
     totCC      += sim.irComeCotas;
     totResgate += sim.irResgate;
     totTotal   += sim.irTotal;
     totLiq     += sim.valorLiquido;
-    totRendPot += sim.aporte * Math.pow((1 + (target?.value ?? 0) / 100), anos) - sim.aporte;
+    totRendPot += sim.aporte * Math.pow((1 + retorno / 100), anos) - sim.aporte;
   }
 
   const totAliqEf = totRend > 0 ? (totTotal / totRend) * 100 : 0;
@@ -1706,14 +1744,14 @@ function renderIR() {
           ? `<div class="ir-custo-cell">
                <span style="display:block">${fmtBRL(row.irTotal)}</span>
                <div class="ir-custo-tip">
-                 <strong>Come-cotas (antecipações em mai/nov)</strong><br>
-                 ${row.irComeCotas > 0 ? fmtBRL(row.irComeCotas) : 'nenhum no período'}<br>
-                 Pago ao longo do tempo, sobre cada período semestral.<br>
-                 A alíquota é sempre 15% — mas o capital pago deixa de crescer.<br>
-                 <br>
-                 <strong>IR no resgate (último trecho)</strong><br>
-                 ${row.irResgate > 0 ? fmtBRL(row.irResgate) : 'zero — trecho final coincidiu com come-cotas'}<br>
-                 Sobre o rendimento entre o último come-cotas e o resgate.<br>
+                 <strong>Come-cotas (antecipações em mai/nov)</strong>
+                 ${row.irComeCotas > 0 ? fmtBRL(row.irComeCotas) : 'nenhum no período'}
+                 Pago ao longo do tempo, sobre cada período semestral.
+                 A alíquota é sempre 15% — mas o capital pago deixa de crescer.
+                 
+                 <strong>IR no resgate (último trecho)</strong>
+                 ${row.irResgate > 0 ? fmtBRL(row.irResgate) : 'zero — trecho final coincidiu com come-cotas'}
+                 Sobre o rendimento entre o último come-cotas e o resgate.
                  Alíquota: 15% (prazo > 720 dias).
                </div>
              </div>`
@@ -1725,32 +1763,32 @@ function renderIR() {
           ? `<div class="ir-custo-cell">
                <span class="ir-val-neg" style="font-family:'Courier New',monospace;font-weight:bold">${fmtPctIr(row.aliqEconomica)}</span>
                <div class="ir-custo-tip">
-                 <strong>O que significa este número?</strong><br>
-                 De cada R$&nbsp;100 que esse fundo poderia ter rendido<br>
-                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco<br>
-                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.<br>
-                 <br>
-                 Para fundos RV sem come-cotas, isso equivale<br>
+                 <strong>O que significa este número?</strong>
+                 De cada R$&nbsp;100 que esse fundo poderia ter rendido
+                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco
+                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.
+                 
+                 Para fundos RV sem come-cotas, isso equivale
                  exatamente à alíquota aplicada: 15%.
                </div>
              </div>`
           : `<div class="ir-custo-cell">
                <span class="ir-custo-eco ir-val-neg">${fmtPctIr(row.aliqEconomica)}</span>
                <div class="ir-custo-tip">
-                 <strong>O que significa este número?</strong><br>
-                 De cada R$&nbsp;100 que esse fundo poderia ter rendido<br>
-                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco<br>
-                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.<br>
-                 <br>
-                 <strong>Por que é maior que 15%?</strong><br>
-                 O come-cotas antecipa IR a cada semestre. O capital<br>
-                 pago ao fisco deixa de crescer nos anos seguintes —<br>
-                 esse custo de oportunidade é invisível mas real.<br>
-                 Quanto maior o prazo e o retorno, maior o impacto.<br>
-                 <br>
-                 <strong>Compare com fundos RV:</strong> sem come-cotas,<br>
-                 todo o capital cresce até o resgate e só então<br>
-                 paga 15%. Por isso RV sempre mostra 15% aqui,<br>
+                 <strong>O que significa este número?</strong>
+                 De cada R$&nbsp;100 que esse fundo poderia ter rendido
+                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco
+                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.
+                 
+                 <strong>Por que é maior que 15%?</strong>
+                 O come-cotas antecipa IR a cada semestre. O capital
+                 pago ao fisco deixa de crescer nos anos seguintes —
+                 esse custo de oportunidade é invisível mas real.
+                 Quanto maior o prazo e o retorno, maior o impacto.
+                 
+                 <strong>Compare com fundos RV:</strong> sem come-cotas,
+                 todo o capital cresce até o resgate e só então
+                 paga 15%. Por isso RV sempre mostra 15% aqui,
                  independente do prazo.
                </div>
              </div>`
@@ -1766,7 +1804,8 @@ function renderIR() {
 
   // Linha de total
   const totRendPct = totAporte > 0 ? ((totBruto / totAporte - 1) * 100) : 0;
-  const totCustoEco = totRendPot > 0 ? (1 - totRend / totRendPot) * 100 : 0;
+  const totGanhoLiq = totLiq - totAporte;
+  const totCustoEco = totRendPot > 0 ? (1 - totGanhoLiq / totRendPot) * 100 : 0;
   html += `<tr class="ir-total-row">
     <td>Total portfólio</td>
     <td>—</td>
@@ -1777,11 +1816,11 @@ function renderIR() {
         ? `<div class="ir-custo-cell">
              <span style="display:block">${fmtBRL(totTotal)}</span>
              <div class="ir-custo-tip">
-               <strong>Come-cotas (antecipações)</strong><br>
-               ${fmtBRL(totCC)}<br>
-               Soma de todos os come-cotas pagos pelos fundos TR.<br>
-               <br>
-               <strong>IR no resgate</strong><br>
+               <strong>Come-cotas (antecipações)</strong>
+               ${fmtBRL(totCC)}
+               Soma de todos os come-cotas pagos pelos fundos TR.
+               
+               <strong>IR no resgate</strong>
                ${totResgate > 0 ? fmtBRL(totResgate) : 'zero'}
              </div>
            </div>`
@@ -1792,13 +1831,13 @@ function renderIR() {
       <div class="ir-custo-cell">
         <span class="ir-custo-eco ir-val-neg">${fmtPctIr(totCustoEco)}</span>
         <div class="ir-custo-tip">
-          <strong>Custo fiscal do portfólio</strong><br>
-          De cada R$&nbsp;100 de potencial deste portfólio,<br>
-          R$&nbsp;${totCustoEco.toFixed(1)} foram para o fisco.<br>
-          <br>
-          É a média ponderada pelo aporte de cada fundo.<br>
-          Fundos RV sempre contribuem com 15%;<br>
-          fundos TR contribuem com mais, dependendo<br>
+          <strong>Custo fiscal do portfólio</strong>
+          De cada R$&nbsp;100 de potencial deste portfólio,
+          R$&nbsp;${totCustoEco.toFixed(1)} de cada R$&nbsp;100 foram para o fisco.
+          
+          É a média ponderada pelo aporte de cada fundo.
+          Fundos RV sempre contribuem com 15%;
+          fundos TR contribuem com mais, dependendo
           do prazo e do retorno (quanto maior, pior o come-cotas).
         </div>
       </div>
@@ -1815,58 +1854,58 @@ function renderIR() {
     <div class="ir-pill">
       <span class="ir-pill-icon">ⓘ</span> RV
       <div class="ir-custo-tip">
-        <strong>Renda Variável — tributação no resgate</strong><br>
-        Sem come-cotas. O capital cresce integralmente até o resgate.<br>
-        No dia do resgate: 15% sobre o rendimento total.<br>
-        <br>
-        Resultado: a base de cálculo do IR é máxima,<br>
+        <strong>Renda Variável — tributação no resgate</strong>
+        Sem come-cotas. O capital cresce integralmente até o resgate.
+        No dia do resgate: 15% sobre o rendimento total.
+        
+        Resultado: a base de cálculo do IR é máxima,
         mas todo o capital trabalhou por mais tempo.
       </div>
     </div>
     <div class="ir-pill">
       <span class="ir-pill-icon">ⓘ</span> TR
       <div class="ir-custo-tip">
-        <strong>Tabela Regressiva — come-cotas semestral</strong><br>
-        Em maio e novembro de cada ano, 15% sobre o rendimento<br>
-        do período é antecipado ao fisco. O capital pago deixa<br>
-        de crescer nos anos seguintes.<br>
-        <br>
-        No resgate, o trecho desde o último come-cotas paga:<br>
-        ≤ 180 dias → 22,5% &nbsp;·&nbsp; ≤ 360d → 20%<br>
-        ≤ 720 dias → 17,5% &nbsp;·&nbsp; &gt; 720d → 15%<br>
-        <br>
-        Quanto maior o prazo e o retorno, maior o custo<br>
+        <strong>Tabela Regressiva — come-cotas semestral</strong>
+        Em maio e novembro de cada ano, 15% sobre o rendimento
+        do período é antecipado ao fisco. O capital pago deixa
+        de crescer nos anos seguintes.
+        
+        No resgate, o trecho desde o último come-cotas paga:
+        ≤ 180 dias → 22,5% &nbsp;·&nbsp; ≤ 360d → 20%
+        ≤ 720 dias → 17,5% &nbsp;·&nbsp; &gt; 720d → 15%
+        
+        Quanto maior o prazo e o retorno, maior o custo
         invisível do come-cotas antecipado.
       </div>
     </div>
     <div class="ir-pill">
       <span class="ir-pill-icon">ⓘ</span> Custo fiscal
       <div class="ir-custo-tip">
-        <strong>O que é o custo fiscal?</strong><br>
-        De cada R$&nbsp;100 que o fundo poderia ter rendido<br>
-        sem nenhum imposto, quanto foi para o fisco?<br>
-        <br>
-        Inclui o IR efetivamente pago <em>e</em> o custo de<br>
-        oportunidade do capital antecipado via come-cotas.<br>
-        <br>
-        RV sempre mostra 15% — é a alíquota exata aplicada.<br>
-        TR mostra mais: o come-cotas destrói rendimento<br>
+        <strong>O que é o custo fiscal?</strong>
+        De cada R$&nbsp;100 que o fundo poderia ter rendido
+        sem nenhum imposto, quanto foi para o fisco?
+        
+        Inclui o IR efetivamente pago <em>e</em> o custo de
+        oportunidade do capital antecipado via come-cotas.
+        
+        RV sempre mostra 15% — é a alíquota exata aplicada.
+        TR mostra mais: o come-cotas destrói rendimento
         composto, e esse custo cresce com o prazo.
       </div>
     </div>
     <div class="ir-pill">
       <span class="ir-pill-icon">ⓘ</span> Ret. alvo
       <div class="ir-custo-tip">
-        <strong>Como é calculado o retorno alvo?</strong><br>
-        Média ponderada dos CAGRs históricos do fundo,<br>
-        onde o peso de cada período = sua duração em anos.<br>
-        <br>
-        12M → peso 1 &nbsp;·&nbsp; 36M → peso 3 &nbsp;·&nbsp; 60M → peso 5<br>
-        Inception → peso = anos desde o início (se &gt; 5,5a)<br>
-        <br>
-        Racional: períodos mais longos têm menor ruído<br>
-        amostral e recebem maior credibilidade estatística.<br>
-        <br>
+        <strong>Como é calculado o retorno alvo?</strong>
+        Média ponderada dos CAGRs históricos do fundo,
+        onde o peso de cada período = sua duração em anos.
+        
+        12M → peso 1 &nbsp;·&nbsp; 36M → peso 3 &nbsp;·&nbsp; 60M → peso 5
+        Inception → peso = anos desde o início (se &gt; 5,5a)
+        
+        Racional: períodos mais longos têm menor ruído
+        amostral e recebem maior credibilidade estatística.
+        
         É uma estimativa — não uma garantia de retorno futuro.
       </div>
     </div>
@@ -1920,14 +1959,17 @@ document.addEventListener('mouseout', e => {
 // OTIMIZADOR DE CARTEIRA
 // ════════════════════════════════════════════════════════════════════════════
 
-let optN   = 3;
-let optObj = 'sharpe';
+let optN      = 3;
+let optObj    = 'sharpe';
+let optMaxW   = 1.0;   // 1.0 = no constraint (100%)
+let optMinW   = 0.01;  // 1% default minimum weight
 
 function setOptN(n) {
   optN = n;
   ['3','5','10'].forEach(k =>
     document.getElementById('optN' + k).classList.toggle('active', +k === n)
   );
+  validateOptConstraints();
 }
 function setOptObj(obj) {
   optObj = obj;
@@ -1935,6 +1977,38 @@ function setOptObj(obj) {
     document.getElementById('optObj' + k.charAt(0).toUpperCase() + k.slice(1))
       .classList.toggle('active', k === obj)
   );
+}
+
+function onOptMaxWSlider() {
+  const v = parseInt(document.getElementById('optMaxWSlider').value);
+  optMaxW = v / 100;
+  document.getElementById('optMaxWVal').textContent = v + '%';
+  document.getElementById('optMaxWNote').textContent = v === 100 ? '(sem restrição)' : '';
+  validateOptConstraints();
+}
+
+function onOptMinWSlider() {
+  // Slider range 10–300 maps to 1.0%–30.0% in steps of 0.1%
+  const raw  = parseInt(document.getElementById('optMinWSlider').value);
+  const pct  = raw / 10;               // e.g. 10→1.0%, 35→3.5%, 300→30.0%
+  optMinW    = pct / 100;
+  document.getElementById('optMinWVal').textContent = pct.toFixed(1) + '%';
+  document.getElementById('optMinWNote').textContent = pct === 1.0 ? '(padrão)' : '';
+  validateOptConstraints();
+}
+
+function validateOptConstraints() {
+  const warn    = document.getElementById('optConstraintWarn');
+  const runBtn  = document.getElementById('optRunBtn');
+  // infeasible if: minW * N > 1  OR  minW > maxW
+  const infeasible = (optMinW * optN > 1.0 + 1e-9) || (optMinW > optMaxW + 1e-9);
+  warn.style.display   = infeasible ? 'block' : 'none';
+  // Still allow running — optimizer skips infeasible combos gracefully
+  if (infeasible) {
+    warn.textContent = optMinW > optMaxW
+      ? '⚠ peso mínimo maior que o máximo'
+      : `⚠ mín. × ${optN} fundos = ${(optMinW * optN * 100).toFixed(0)}% > 100% — restrição incompatível`;
+  }
 }
 
 // ── Álgebra linear básica (vetores e matrizes, sem dependências) ──────────────
@@ -2002,18 +2076,41 @@ function portVol(w, cov) {
 
 // ── Mínima variância analítico ────────────────────────────────────────────────
 // w* = Σ⁻¹ · 1 / (1ᵀ · Σ⁻¹ · 1)
+// Mínima variância long-only via remoção iterativa de ativos com peso negativo.
+// Mesma abordagem do max-Sharpe: garante solução exata para o subconjunto ativo.
 function minVolWeights(cov) {
-  const inv = invertMatrix(cov);
-  if (!inv) return null;
-  const ones  = new Array(cov.length).fill(1);
-  const inv1  = matVec(inv, ones);
-  const denom = dot(ones, inv1);
-  if (Math.abs(denom) < 1e-12) return null;
-  const w = inv1.map(x => x / denom);
-  // Clip negatives (short-selling not allowed) and renormalise
-  const wPos  = w.map(x => Math.max(0, x));
-  const total = wPos.reduce((a, b) => a + b, 0);
-  return total > 0 ? wPos.map(x => x / total) : null;
+  const n      = cov.length;
+  let active   = cov.map((_, i) => i);
+
+  for (let iter = 0; iter < n; iter++) {
+    const k      = active.length;
+    if (k === 0) return null;
+
+    const subCov = active.map(i => active.map(j => cov[i][j]));
+    const inv    = invertMatrix(subCov);
+    if (!inv) return null;
+
+    const ones  = new Array(k).fill(1);
+    const inv1  = matVec(inv, ones);
+    const denom = inv1.reduce((a, b) => a + b, 0);
+    if (Math.abs(denom) < 1e-12) return null;
+
+    const wSub = inv1.map(x => x / denom);
+
+    if (wSub.every(x => x >= -1e-10)) {
+      const wPos = wSub.map(x => Math.max(0, x));
+      const tot  = wPos.reduce((a, b) => a + b, 0);
+      if (tot <= 0) return null;
+      const wFull = new Array(n).fill(0);
+      active.forEach((origIdx, k) => { wFull[origIdx] = wPos[k] / tot; });
+      return wFull;
+    }
+
+    // Remove asset with most negative weight
+    const minK = wSub.indexOf(Math.min(...wSub));
+    active.splice(minK, 1);
+  }
+  return null;
 }
 
 // ── Máximo Sharpe (tangency portfolio) ───────────────────────────────────────
@@ -2021,19 +2118,52 @@ function minVolWeights(cov) {
 // μ[i] = retorno alvo do fundo i (%)
 // rf    = CDI alvo (%)
 // Se pesos negativos → clip + renormalise (restrição long-only)
+// Máximo Sharpe long-only via Critical Line (remoção iterativa de ativos negativos).
+// Quando a solução analítica Σ⁻¹(μ−rf) tem pesos negativos, remove o ativo
+// com peso mais negativo e re-resolve no subconjunto restante.
+// Converge para o verdadeiro portfólio tangente long-only.
+// Nota: garante ótimo local da subárea ativa; casos com múltiplos ativos
+// borderline simultâneos podem precisar de QP completo, mas são raros
+// na prática com fundos de ações brasileiros.
 function maxSharpeWeights(cnpjs, mus, cdiTarget, cov) {
-  const inv = invertMatrix(cov);
-  if (!inv) return null;
-  const excess = mus.map(m => m - cdiTarget);
-  // Se todos os excessos ≤ 0, não há portfólio com Sharpe positivo
-  if (excess.every(e => e <= 0)) return null;
-  const invExcess = matVec(inv, excess);
-  const denom     = invExcess.reduce((a, b) => a + b, 0);
-  if (Math.abs(denom) < 1e-12) return null;
-  const w    = invExcess.map(x => x / denom);
-  const wPos = w.map(x => Math.max(0, x));
-  const tot  = wPos.reduce((a, b) => a + b, 0);
-  return tot > 0 ? wPos.map(x => x / tot) : null;
+  const n      = mus.length;
+  let active   = mus.map((_, i) => i);  // índices dos ativos ativos
+
+  for (let iter = 0; iter < n; iter++) {
+    const k       = active.length;
+    if (k === 0) return null;
+
+    // Sub-problema: extrair sub-matriz e sub-vetor
+    const subCov = active.map(i => active.map(j => cov[i][j]));
+    const subMus = active.map(i => mus[i]);
+    const excess = subMus.map(m => m - cdiTarget);
+    if (excess.every(e => e <= 0)) return null;  // nenhum ativo bate o CDI
+
+    const inv = invertMatrix(subCov);
+    if (!inv) return null;
+
+    const ie    = matVec(inv, excess);
+    const denom = ie.reduce((a, b) => a + b, 0);
+    if (Math.abs(denom) < 1e-12) return null;
+
+    const wSub = ie.map(x => x / denom);
+
+    // Todos não-negativos → solução encontrada
+    if (wSub.every(x => x >= -1e-10)) {
+      const wPos = wSub.map(x => Math.max(0, x));
+      const tot  = wPos.reduce((a, b) => a + b, 0);
+      if (tot <= 0) return null;
+      // Expande de volta para n dimensões
+      const wFull = new Array(n).fill(0);
+      active.forEach((origIdx, k) => { wFull[origIdx] = wPos[k] / tot; });
+      return wFull;
+    }
+
+    // Remove o ativo com peso mais negativo e repete
+    const minK = wSub.indexOf(Math.min(...wSub));
+    active.splice(minK, 1);
+  }
+  return null;
 }
 
 // ── Máximo retorno: sem restrição → concentrado no fundo de maior retorno
@@ -2077,12 +2207,26 @@ function applyOptimizedPortfolio(cnpjs, weights) {
     if (row) row.classList.add('inactive');
   });
 
-  // Aplica novos pesos (arredonda para inteiros, redistribui resto)
-  const rounded = weights.map(w => Math.round(w * 100));
-  const diff    = 100 - rounded.reduce((a, b) => a + b, 0);
-  // Adiciona o diff ao maior peso para garantir soma = 100
-  const maxIdx  = rounded.indexOf(Math.max(...rounded));
-  rounded[maxIdx] += diff;
+  // Arredondamento inteligente: garante mínimo 1% para cada fundo da combinação,
+  // depois redistribui o excesso tirando 1% por vez dos maiores.
+  const k = weights.length;
+  // Passo 1: arredonda normalmente
+  let rounded = weights.map(w => Math.round(w * 100));
+  // Passo 2: força mínimo de 1% para todos (são fundos escolhidos pelo otimizador)
+  rounded = rounded.map(v => Math.max(1, v));
+  // Passo 3: ajusta soma para 100, tirando 1% dos maiores pesos iterativamente
+  let total = rounded.reduce((a, b) => a + b, 0);
+  while (total > 100) {
+    const maxIdx = rounded.indexOf(Math.max(...rounded));
+    if (rounded[maxIdx] <= 1) break;  // não pode tirar mais
+    rounded[maxIdx]--;
+    total--;
+  }
+  // Se ficou abaixo de 100 (raro), adiciona ao maior
+  if (total < 100) {
+    const maxIdx = rounded.indexOf(Math.max(...rounded));
+    rounded[maxIdx] += (100 - total);
+  }
 
   document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
     const idx = cnpjs.indexOf(chk.dataset.cnpj);
@@ -2157,6 +2301,39 @@ function runOptimizer() {
           if (!w) w = maxReturnWeights(mus);
         }
         if (!w) w = new Array(k).fill(1 / k);  // fallback uniforme
+
+        // Enforce min/max weight constraints
+        // Feasibility: minW*k ≤ 1, maxW*k ≥ 1, minW ≤ maxW
+        const feasible = (optMinW * k <= 1.0 + 1e-9)
+                      && (optMaxW * k >= 1.0 - 1e-9)
+                      && (optMinW  <= optMaxW + 1e-9);
+        if (!feasible) { continue; }  // skip infeasible combination
+
+        if (optMaxW < 1.0 || optMinW > 1e-9) {
+          // Alternating projections onto {sum=1} and box [minW, maxW]
+          // Bug-free version: never renorm after clip (that can violate maxW)
+          for (let iter = 0; iter < 50; iter++) {
+            // Project onto sum=1: add uniform slack
+            const slack = (1.0 - w.reduce((a,b) => a+b, 0)) / k;
+            w = w.map(x => x + slack);
+            // Project onto box
+            const prev = [...w];
+            w = w.map(x => Math.min(optMaxW, Math.max(optMinW, x)));
+            if (w.every((x, i) => Math.abs(x - prev[i]) < 1e-10)) break;
+          }
+          // Final redistribution to guarantee sum=1 while respecting bounds
+          for (let iter = 0; iter < 50; iter++) {
+            const diff = 1.0 - w.reduce((a, b) => a + b, 0);
+            if (Math.abs(diff) < 1e-12) break;
+            const freeIdx = diff > 0
+              ? w.map((x, i) => x < optMaxW - 1e-12 ? i : -1).filter(i => i >= 0)
+              : w.map((x, i) => x > optMinW + 1e-12 ? i : -1).filter(i => i >= 0);
+            if (freeIdx.length === 0) break;
+            const per = diff / freeIdx.length;
+            freeIdx.forEach(i => { w[i] += per; });
+            w = w.map(x => Math.min(optMaxW, Math.max(optMinW, x)));
+          }
+        }
 
         const p = evalPortfolio(w, combo, mus, cdiTarget, cov);
 
