@@ -287,9 +287,8 @@ def process_fund(fund: dict, anchor: datetime.date, prev_max_quotas: dict) -> di
         "cagrInception": cagr(inc_quota, end_quota, years_apart(inc_date, end_date)) if inc_date else None,
         "error":         False,
     }
-    print(f"  CAGR 12M={result['cagr12']:.2f if result['cagr12'] else 'N/D'} "
-          f"36M={result['cagr36']:.2f if result['cagr36'] else 'N/D'} "
-          f"60M={result['cagr60']:.2f if result['cagr60'] else 'N/D'}")
+    def _fmt(v): return f"{v:.2f}" if v is not None else "N/D"
+    print(f"  CAGR 12M={_fmt(result['cagr12'])} 36M={_fmt(result['cagr36'])} 60M={_fmt(result['cagr60'])}")
     return result
 
 
