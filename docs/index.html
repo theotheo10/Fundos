@@ -445,22 +445,22 @@
   .ir-table-wrap { overflow-x: auto; }
   .ir-table {
     width: 100%; border-collapse: collapse;
-    font-size: 0.8rem; min-width: 820px;
+    font-size: 0.76rem; min-width: 680px;
   }
   .ir-table thead th {
-    font-family: 'Courier New', monospace; font-size: 0.58rem;
-    text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
-    padding: 0.6rem 1rem; text-align: right; border-bottom: 1px solid var(--border);
+    font-family: 'Courier New', monospace; font-size: 0.56rem;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    padding: 0.5rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border);
     background: var(--bg); white-space: nowrap;
   }
   .ir-table thead th:first-child { text-align: left; }
   .ir-table tbody td {
-    padding: 0.65rem 1rem; text-align: right;
+    padding: 0.55rem 0.7rem; text-align: right;
     border-bottom: 1px solid var(--border);
-    font-family: 'Courier New', monospace; font-size: 0.78rem;
+    font-family: 'Courier New', monospace; font-size: 0.75rem;
   }
   .ir-table tbody td:first-child {
-    text-align: left; font-family: inherit; font-size: 0.8rem;
+    text-align: left; font-family: inherit; font-size: 0.77rem;
   }
   .ir-table tbody tr:last-child td { border-bottom: none; }
   .ir-table tbody tr.ir-total-row td {
@@ -609,13 +609,10 @@
 </div><!-- /tab-portfolio -->
 
 <div class="legend">
-  <div class="legend-item"><span class="legend-key">CAGR</span><span>taxa de crescimento anual composta</span></div>
-  <div class="legend-item"><span class="legend-key">N/D</span><span>dados insuficientes para o período</span></div>
   <div class="legend-status">
     <span class="status-dot loading" id="statusDot"></span><span id="statusText">Carregando…</span>
     <span id="statusDate"></span>
   </div>
-  <div class="legend-item legend-src">CVM · inf_diario_fi · IBOV: Yahoo Finance</div>
 </div>
 
 <script>
@@ -1603,8 +1600,6 @@ function renderIR() {
       <th>Ret. alvo</th>
       <th>Aporte</th>
       <th>Valor bruto</th>
-      <th>Come-cotas</th>
-      <th>IR resgate</th>
       <th>IR total</th>
       <th>Custo fiscal</th>
       <th>Valor líquido</th>
@@ -1619,7 +1614,7 @@ function renderIR() {
     if (row.sem_dados) {
       html += `<tr>
         <td>${row.nome}${tribBadge}</td>
-        <td colspan="9" class="ir-val-muted" style="text-align:center">retorno alvo indisponível</td>
+        <td colspan="7" class="ir-val-muted" style="text-align:center">retorno alvo indisponível</td>
       </tr>`;
       continue;
     }
@@ -1629,10 +1624,12 @@ function renderIR() {
       <td>${row.nome}${tribBadge}</td>
       <td class="ir-val-pos">+${row.retorno.toFixed(1)}%</td>
       <td>${fmtBRL(row.aporte)}</td>
-      <td>${fmtBRL(row.valorBruto)} <span class="ir-val-muted">(+${rendPct.toFixed(0)}%)</span></td>
-      <td class="ir-val-neg">${row.irComeCotas > 0 ? fmtBRL(row.irComeCotas) : '<span class="ir-val-muted">—</span>'}</td>
-      <td class="ir-val-neg">${row.irResgate   > 0 ? fmtBRL(row.irResgate)   : '<span class="ir-val-muted">—</span>'}</td>
-      <td class="ir-val-neg">${fmtBRL(row.irTotal)}</td>
+      <td>${fmtBRL(row.valorBruto)}</td>
+      <td class="ir-val-neg">
+        <span style="display:block">${fmtBRL(row.irTotal)}</span>
+        ${row.irComeCotas > 0 ? `<span class="ir-custo-real">cc: ${fmtBRL(row.irComeCotas)}</span>` : ''}
+        ${row.irResgate   > 0 ? `<span class="ir-custo-real">res: ${fmtBRL(row.irResgate)}</span>` : ''}
+      </td>
       <td>
         ${row.trib === 'RV'
           ? `<span class="ir-val-neg" style="font-family:'Courier New',monospace">${fmtPctIr(row.aliqEfetiva)}</span>
@@ -1665,10 +1662,12 @@ function renderIR() {
     <td>Total portfólio</td>
     <td>—</td>
     <td>${fmtBRL(totAporte)}</td>
-    <td>${fmtBRL(totBruto)} <span class="ir-val-muted">(+${totRendPct.toFixed(0)}%)</span></td>
-    <td class="ir-val-neg">${totCC      > 0 ? fmtBRL(totCC)      : '<span class="ir-val-muted">—</span>'}</td>
-    <td class="ir-val-neg">${totResgate > 0 ? fmtBRL(totResgate) : '<span class="ir-val-muted">—</span>'}</td>
-    <td class="ir-val-neg">${fmtBRL(totTotal)}</td>
+    <td>${fmtBRL(totBruto)}</td>
+    <td class="ir-val-neg">
+      <span style="display:block">${fmtBRL(totTotal)}</span>
+      ${totCC      > 0 ? `<span class="ir-custo-real">cc: ${fmtBRL(totCC)}</span>`      : ''}
+      ${totResgate > 0 ? `<span class="ir-custo-real">res: ${fmtBRL(totResgate)}</span>` : ''}
+    </td>
     <td>
       <div class="ir-custo-cell">
         <span class="ir-custo-eco ir-val-neg">${fmtPctIr(totRendPot > 0 ? (1 - totRend/totRendPot)*100 : 0)}</span>
@@ -1689,10 +1688,9 @@ function renderIR() {
 
   html += `</tbody></table></div>
   <div class="ir-note">
-    RV: 15% sobre rendimento no resgate, sem come-cotas. &nbsp;·&nbsp;
-    TR: come-cotas de 15% em mai/nov sobre rendimento do período; alíquota do último trecho por prazo total do aporte
-    (≤180d&nbsp;22,5% · 181–360d&nbsp;20% · 361–720d&nbsp;17,5% · &gt;720d&nbsp;15%). &nbsp;·&nbsp;
-    Projeção usa retorno alvo de cada fundo (média pond. por período).
+    RV: 15% no resgate, sem come-cotas. &nbsp;·&nbsp;
+    TR: come-cotas de 15% em mai/nov + alíquota complementar no resgate (≤180d 22,5% · ≤360d 20% · ≤720d 17,5% · &gt;720d 15%). &nbsp;·&nbsp;
+    IR total = cc + resgate. &nbsp;·&nbsp; Projeção via retorno alvo de cada fundo.
   </div>`;
 
   el.className = '';
