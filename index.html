@@ -196,20 +196,35 @@
     color: var(--muted); margin-bottom: 0.7rem;
   }
   .port-patrimonio-row {
-    display: flex; align-items: center; gap: 0.5rem;
+    display: flex; align-items: center; gap: 0.6rem;
   }
   .port-patrimonio-row label {
     font-family: 'Courier New', monospace; font-size: 0.62rem;
     text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
     white-space: nowrap;
   }
-  .port-patrimonio-row input {
-    font-family: 'Courier New', monospace; font-size: 0.88rem;
-    padding: 4px 8px; border: 1px solid var(--border);
-    background: var(--bg); color: var(--text);
-    width: 140px; outline: none; border-radius: 4px;
+  .pat-input-wrap {
+    position: relative; display: flex; align-items: center;
   }
-  .port-patrimonio-row input:focus { border-color: var(--accent); }
+  .pat-prefix {
+    position: absolute; left: 10px;
+    font-family: 'Courier New', monospace; font-size: 0.75rem;
+    color: var(--muted); pointer-events: none; user-select: none;
+  }
+  .port-patrimonio-row input {
+    font-family: 'Courier New', monospace; font-size: 0.9rem; font-weight: bold;
+    padding: 7px 10px 7px 28px;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text);
+    width: 160px; outline: none;
+    border-radius: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .port-patrimonio-row input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+  .port-patrimonio-row input:hover:not(:focus) { border-color: var(--text); }
 
   /* Barra de total */
   .port-bar-row {
@@ -318,8 +333,8 @@
   }
   .port-alloc-row {
     display: grid;
-    grid-template-columns: 140px 1fr 40px 90px;
-    align-items: center; gap: 0.8rem;
+    grid-template-columns: 120px 1fr 36px 82px 62px 56px 56px;
+    align-items: center; gap: 0.6rem;
     margin-bottom: 0.5rem;
   }
   .port-alloc-row:last-child { margin-bottom: 0; }
@@ -337,12 +352,71 @@
     font-family: 'Courier New', monospace; font-size: 0.68rem;
     color: var(--muted); text-align: right;
   }
+  .port-alloc-target {
+    font-family: 'Courier New', monospace; font-size: 0.72rem;
+    font-weight: bold; text-align: right;
+  }
+  .port-alloc-target.pos { color: var(--green); }
+  .port-alloc-target.neg { color: var(--red); }
+  .port-alloc-target.na  { color: var(--muted); font-weight: normal; font-size: 0.65rem; }
+  .port-alloc-vol, .port-alloc-sharpe {
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+    color: var(--muted); text-align: right;
+  }
+  .port-alloc-total {
+    display: grid;
+    grid-template-columns: 120px 1fr 36px 82px 62px 56px 56px;
+    align-items: center; gap: 0.6rem;
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--border);
+  }
+  .port-alloc-total-label {
+    font-family: 'Courier New', monospace; font-size: 0.62rem;
+    font-weight: bold; color: var(--text);
+  }
+  .port-alloc-total-val {
+    font-family: 'Courier New', monospace; font-size: 0.72rem;
+    font-weight: bold; text-align: right;
+  }
+  .port-alloc-total-val.pos { color: var(--green); }
+  .port-alloc-total-val.neg { color: var(--red); }
+  .port-alloc-total-val.neu { color: var(--text); }
+  .port-alloc-total-val.muted { color: var(--muted); font-weight: normal; }
+  .port-alloc-header {
+    display: grid;
+    grid-template-columns: 120px 1fr 36px 82px 62px 56px 56px;
+    gap: 0.6rem; margin-bottom: 0.45rem;
+  }
+  .port-alloc-header span {
+    font-family: 'Courier New', monospace; font-size: 0.56rem;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); text-align: right;
+  }
+  .port-alloc-header span:first-child { text-align: left; }
+  .alloc-target-wrap { position: relative; display: inline-block; width: 100%; text-align: right; }
+  .alloc-target-wrap:hover .alloc-target-tip {
+    opacity: 1; pointer-events: auto; transform: translateY(0);
+  }
+  .alloc-target-tip {
+    position: fixed;
+    background: var(--text); color: var(--bg);
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    padding: 8px 11px; border-radius: 5px; white-space: pre-line;
+    width: 280px;
+    opacity: 0; pointer-events: none;
+    transform: translateY(4px); transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 9999; line-height: 1.8;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
 
   /* Correlação */
   .port-corr-panel { padding: 1rem 1.4rem; flex: 1; overflow: auto; }
+  .corr-table-wrap { overflow-x: auto; }
   .corr-table {
     width: 100%; border-collapse: collapse;
     font-family: 'Courier New', monospace; font-size: 0.62rem;
+    min-width: 300px;
   }
   .corr-table th {
     color: var(--muted); padding: 4px 6px;
@@ -355,6 +429,176 @@
     color: var(--muted); padding: 1.5rem 0; text-align: center;
   }
 
+
+  /* ── Simulador de IR ── */
+  .ir-section {
+    margin-top: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .ir-header {
+    padding: 1rem 1.4rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 1.2rem; flex-wrap: wrap;
+  }
+  .ir-header-title {
+    font-size: 0.72rem; font-family: 'Courier New', monospace;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+  }
+  .ir-slider-wrap {
+    display: flex; align-items: center; gap: 0.7rem; flex: 1; min-width: 220px;
+  }
+  .ir-slider-label {
+    font-family: 'Courier New', monospace; font-size: 0.68rem; color: var(--muted);
+    white-space: nowrap;
+  }
+  .ir-slider {
+    flex: 1; accent-color: var(--accent);
+    height: 3px; cursor: pointer;
+  }
+  .ir-slider-val {
+    font-family: 'Courier New', monospace; font-size: 0.8rem;
+    font-weight: bold; color: var(--text); min-width: 40px; text-align: right;
+  }
+  .ir-empty {
+    font-family: 'Courier New', monospace; font-size: 0.7rem;
+    color: var(--muted); padding: 1.5rem; text-align: center;
+  }
+  .ir-table-wrap { overflow-x: auto; }
+  .ir-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.76rem; min-width: 680px;
+  }
+  .ir-table thead th {
+    font-family: 'Courier New', monospace; font-size: 0.56rem;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    padding: 0.5rem 0.7rem; text-align: right; border-bottom: 1px solid var(--border);
+    background: var(--bg); white-space: nowrap;
+  }
+  .ir-table thead th:first-child { text-align: left; }
+  .ir-table tbody td {
+    padding: 0.55rem 0.7rem; text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Courier New', monospace; font-size: 0.75rem;
+  }
+  .ir-table tbody td:first-child {
+    text-align: left; font-family: inherit; font-size: 0.77rem;
+  }
+  .ir-table tbody tr:last-child td { border-bottom: none; }
+  .ir-table tbody tr.ir-total-row td {
+    border-top: 2px solid var(--border);
+    font-weight: bold; background: var(--bg);
+  }
+  .ir-val-pos  { color: var(--green); }
+  .ir-val-neg  { color: var(--red); }
+  .ir-val-muted { color: var(--muted); font-size: 0.7rem; }
+  .ir-custo-cell { position: relative; display: inline-block; width: 100%; text-align: right; cursor: default; }
+  .ir-custo-eco  { font-weight: bold; display: block; }
+  .ir-custo-real { font-size: 0.65rem; color: var(--muted); display: block; margin-top: 1px; }
+  .ir-custo-cell:hover .ir-custo-tip {
+    opacity: 1; pointer-events: auto; transform: translateY(0);
+  }
+  .ir-custo-tip {
+    position: fixed;
+    background: var(--text); color: var(--bg);
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    padding: 10px 13px; border-radius: 6px; white-space: pre-line;
+    width: 340px;
+    opacity: 0; pointer-events: none;
+    transform: translateY(4px); transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 9999; line-height: 1.8; text-align: left;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .ir-trib-badge {
+    display: inline-block; font-family: 'Courier New', monospace;
+    font-size: 0.58rem; padding: 1px 5px; border-radius: 4px;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .ir-trib-rv { border: 0.5px solid var(--green); color: var(--green); background: var(--green-light); }
+  .ir-trib-tr { border: 0.5px solid var(--amber); color: var(--amber); background: var(--amber-light); }
+  .ir-legend {
+    display: flex; gap: 0.5rem; padding: 0.7rem 1rem 0.9rem;
+    flex-wrap: wrap;
+  }
+  .ir-pill {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: 'Courier New', monospace; font-size: 0.62rem;
+    padding: 3px 9px; border-radius: 20px; cursor: default;
+    border: 1px solid var(--border); color: var(--muted);
+    transition: border-color 0.15s, color 0.15s;
+    user-select: none;
+  }
+  .ir-pill:hover { border-color: var(--text); color: var(--text); }
+  .ir-pill .ir-pill-icon { font-size: 0.58rem; opacity: 0.7; }
+  .ir-pill:hover .ir-custo-tip {
+    opacity: 1; pointer-events: auto; transform: translateY(0);
+  }
+
+  /* ── Otimizador ── */
+  .opt-bar {
+    padding: 0.7rem 1rem 0.6rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .opt-bar-label {
+    font-family: 'Courier New', monospace; font-size: 0.56rem;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 0.55rem;
+  }
+  .opt-controls {
+    display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;
+  }
+  .opt-size-group, .opt-obj-group {
+    display: flex; gap: 0.3rem;
+  }
+  .opt-divider {
+    width: 1px; background: var(--border); margin: 0 0.1rem; align-self: stretch;
+  }
+  .opt-btn {
+    font-family: 'Courier New', monospace; font-size: 0.64rem;
+    padding: 4px 9px; border-radius: 5px; cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    transition: all 0.12s; white-space: nowrap;
+  }
+  .opt-btn:hover  { border-color: var(--accent); color: var(--accent); }
+  .opt-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .opt-run {
+    font-family: 'Courier New', monospace; font-size: 0.64rem;
+    padding: 4px 12px; border-radius: 5px; cursor: pointer;
+    background: var(--accent); border: 1px solid var(--accent); color: #fff;
+    font-weight: bold; transition: opacity 0.12s; white-space: nowrap;
+    margin-left: auto;
+  }
+  .opt-run:hover    { opacity: 0.85; }
+  .opt-run:disabled { opacity: 0.4; cursor: not-allowed; }
+  .opt-status {
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    color: var(--muted); margin-top: 0.4rem; min-height: 1rem;
+  }
+  .opt-constraint-row {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin-top: 0.5rem; flex-wrap: wrap;
+  }
+  .opt-constraint-label {
+    font-family: 'Courier New', monospace; font-size: 0.6rem;
+    color: var(--muted); white-space: nowrap;
+  }
+  .opt-maxw-slider, .opt-minw-slider {
+    flex: 1; min-width: 80px; max-width: 120px;
+    accent-color: var(--accent); height: 3px; cursor: pointer;
+  }
+  .opt-maxw-val, .opt-minw-val {
+    font-family: 'Courier New', monospace; font-size: 0.7rem;
+    font-weight: bold; color: var(--text); min-width: 36px;
+  }
+  .opt-constraint-warn {
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    color: var(--red); margin-top: 0.25rem; display: none;
+  }
   @media (max-width: 900px) {
     .port-layout { grid-template-columns: 1fr; }
     .port-left { border-right: none; border-bottom: 1px solid var(--border); }
@@ -411,13 +655,54 @@
         <div class="port-section-label">Composição</div>
         <div class="port-patrimonio-row">
           <label>Patrimônio</label>
-          <input type="text" id="portPatrimonio" value="1.000.000"
-            oninput="onPatrimonioInput(this)" onblur="onPatrimonioBlur(this)">
+          <div class="pat-input-wrap">
+            <span class="pat-prefix">R$</span>
+            <input type="text" id="portPatrimonio" value="1.000.000"
+              oninput="onPatrimonioInput(this)" onblur="onPatrimonioBlur(this)"
+              onkeydown="if(event.key==='Enter'){this.blur();}">
+          </div>
         </div>
       </div>
       <div class="port-bar-row">
         <div class="port-bar-track"><div class="port-bar-fill" id="portBarFill" style="width:0%"></div></div>
         <span class="port-bar-label" id="portTotalPct">0% alocado</span>
+      </div>
+      <div class="opt-bar">
+        <div class="opt-bar-label">Otimizador de carteira</div>
+        <div class="opt-controls">
+          <div class="opt-size-group">
+            <button class="opt-btn active" id="optN3"  onclick="setOptN(3)">3 fundos</button>
+            <button class="opt-btn"        id="optN5"  onclick="setOptN(5)">5 fundos</button>
+            <button class="opt-btn"        id="optN10" onclick="setOptN(10)">10 fundos</button>
+          </div>
+          <div class="opt-divider"></div>
+          <div class="opt-obj-group">
+            <button class="opt-btn active" id="optObjSharpe"  onclick="setOptObj('sharpe')">Máx. Sharpe</button>
+            <button class="opt-btn"        id="optObjReturn"  onclick="setOptObj('return')">Máx. retorno</button>
+            <button class="opt-btn"        id="optObjVol"     onclick="setOptObj('vol')">Mín. vol.</button>
+          </div>
+          <button class="opt-run" id="optRunBtn" onclick="runOptimizer()" disabled>Otimizar</button>
+        </div>
+        <div class="opt-constraint-row">
+          <span class="opt-constraint-label">Peso máx. por fundo:</span>
+          <input type="range" class="opt-maxw-slider" id="optMaxWSlider"
+            min="10" max="100" value="100" step="5"
+            oninput="onOptMaxWSlider()">
+          <span class="opt-maxw-val" id="optMaxWVal">100%</span>
+          <span class="opt-constraint-label" id="optMaxWNote" style="opacity:0.5">(sem restrição)</span>
+        </div>
+        <div class="opt-constraint-row">
+          <span class="opt-constraint-label">Peso mín. por fundo:</span>
+          <input type="range" class="opt-minw-slider" id="optMinWSlider"
+            min="10" max="300" value="10" step="1"
+            oninput="onOptMinWSlider()">
+          <span class="opt-minw-val" id="optMinWVal">1.0%</span>
+          <span class="opt-constraint-label" id="optMinWNote" style="opacity:0.5">(padrão)</span>
+        </div>
+        <div class="opt-constraint-warn" id="optConstraintWarn">
+          ⚠ restrições incompatíveis para este tamanho de carteira
+        </div>
+        <div class="opt-status" id="optStatus">Aguardando dados…</div>
       </div>
       <div class="fund-selector" id="fundSelector"></div>
     </div>
@@ -429,7 +714,12 @@
         <div id="portMetrics" class="port-empty">Selecione ao menos um fundo e defina os pesos</div>
       </div>
       <div class="port-alloc-panel" id="portAllocPanel" style="display:none">
-        <div class="port-section-label" style="margin-bottom:0.7rem">Alocação</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem">
+          <div class="port-section-label">Alocação</div>
+        </div>
+        <div class="port-alloc-header">
+          <span>Fundo</span><span></span><span>Peso</span><span>Valor</span><span>Ret. alvo</span><span>Vol.</span><span>Sharpe</span>
+        </div>
         <div id="portAlloc"></div>
       </div>
       <div class="port-corr-panel">
@@ -439,16 +729,28 @@
     </div>
 
   </div>
+
+  <!-- ── Simulador de IR ── -->
+  <div class="ir-section" id="irSection">
+    <div class="ir-header">
+      <span class="ir-header-title">Simulação de IR no resgate</span>
+      <div class="ir-slider-wrap">
+        <span class="ir-slider-label">Prazo até o resgate:</span>
+        <input type="range" class="ir-slider" id="irSlider" min="1" max="20" value="5" step="1"
+               oninput="onIrSlider()">
+        <span class="ir-slider-val" id="irSliderVal">5 anos</span>
+      </div>
+    </div>
+    <div id="irBody" class="ir-empty">Selecione fundos e pesos no portfólio acima</div>
+  </div>
+
 </div><!-- /tab-portfolio -->
 
 <div class="legend">
-  <div class="legend-item"><span class="legend-key">CAGR</span><span>taxa de crescimento anual composta</span></div>
-  <div class="legend-item"><span class="legend-key">N/D</span><span>dados insuficientes para o período</span></div>
   <div class="legend-status">
     <span class="status-dot loading" id="statusDot"></span><span id="statusText">Carregando…</span>
     <span id="statusDate"></span>
   </div>
-  <div class="legend-item legend-src">CVM · inf_diario_fi · IBOV: Yahoo Finance</div>
 </div>
 
 <script>
@@ -534,6 +836,101 @@ function cagrInception(f) {
   const years = (new Date(f.latestDate) - new Date(meta.inception)) / (365.25 * 86400000);
   if (years <= 0) return null;
   return (Math.pow(latestQuota / inceptionQuota, 1 / years) - 1) * 100;
+}
+
+// ── Retorno Alvo ──────────────────────────────────────────────────────────────
+// Metodologia: média ponderada dos CAGRs onde peso = duração do período (anos).
+// Racional: var(CAGR_T) ∝ 1/T  →  estimador de mínima variância usa pesos ∝ T.
+// Períodos mais longos têm menos ruído amostral e recebem maior credibilidade.
+// cagrInception só entra se o fundo existir há mais de 5.5 anos (evita sobreposição
+// excessiva com cagr60 e garante que a estimativa seja estruturalmente diferente).
+function calcTargetReturn(f) {
+  const samples = [];
+  // (duração em anos, valor CAGR)
+  if (f.cagr12  != null) samples.push([1.0, f.cagr12]);
+  if (f.cagr36  != null) samples.push([3.0, f.cagr36]);
+  if (f.cagr60  != null) samples.push([5.0, f.cagr60]);
+
+  const meta = FUND_META[f.cnpjFmt] || {};
+  if (meta.inception && f.latestDate) {
+    const inceptionYears = (new Date(f.latestDate) - new Date(meta.inception + 'T00:00:00')) / (365.25 * 86400000);
+    const ci = cagrInception(f);
+    if (ci != null && inceptionYears > 5.5) {
+      samples.push([inceptionYears, ci]);
+    }
+  }
+
+  if (samples.length === 0) return null;
+  const totalWeight = samples.reduce((s, [T]) => s + T, 0);
+  const weighted    = samples.reduce((s, [T, v]) => s + T * v, 0);
+  return {
+    value:   weighted / totalWeight,
+    samples: samples,  // para tooltip: [[anos, cagr], ...]
+  };
+}
+
+// Retorno alvo do portfólio: E[R_p] = Σ w_i · E[R_i]  (linear nos pesos)
+// As correlações não afetam o retorno esperado — apenas o risco.
+// Sharpe = (E[R_p] - CDI_alvo) / σ_p
+// CDI_alvo: média ponderada dos CAGRs do CDI pelos mesmos períodos (pesos 1, 3, 5)
+// σ_p = √(wᵀ Σ w) usando matriz de covariância histórica dos retornos diários
+function calcPortfolioTargetReturn(selected, wNorm, historyData) {
+  const targets = {};
+  for (const cnpj of selected) {
+    const fData = funds.find(f => f.cnpjFmt === cnpj);
+    if (!fData) continue;
+    const t = calcTargetReturn(fData);
+    if (t) targets[cnpj] = t.value;
+  }
+  if (Object.keys(targets).length === 0) return null;
+
+  // Retorno esperado ponderado do portfólio
+  let expReturn = 0;
+  for (const cnpj of selected) {
+    if (targets[cnpj] != null) expReturn += wNorm[cnpj] * targets[cnpj];
+  }
+
+  // CDI alvo: mesma metodologia dos fundos — média ponderada por período
+  // usa cagr12 (peso 1), cagr36 (peso 3), cagr60 (peso 5) do CDI global
+  let cdiTarget = null;
+  if (cdi) {
+    const cdiSamples = [];
+    if (cdi.cagr12 != null) cdiSamples.push([1, cdi.cagr12]);
+    if (cdi.cagr36 != null) cdiSamples.push([3, cdi.cagr36]);
+    if (cdi.cagr60 != null) cdiSamples.push([5, cdi.cagr60]);
+    if (cdiSamples.length > 0) {
+      const totalW = cdiSamples.reduce((s, [T]) => s + T, 0);
+      cdiTarget    = cdiSamples.reduce((s, [T, v]) => s + T * v, 0) / totalW;
+    }
+  }
+
+  // σ_p usando matriz de covariância histórica: σ_p² = Σ_i Σ_j w_i w_j σ_i σ_j ρ_{ij}
+  let portVol = null;
+  if (historyData && historyData.correlation) {
+    const vols = {};
+    for (const cnpj of selected) {
+      const fd = historyData.funds[cnpj];
+      if (!fd) continue;
+      const rets = fd.returns;
+      const n    = rets.length;
+      const mean = rets.reduce((a, b) => a + b, 0) / n;
+      const var_ = rets.reduce((a, r) => a + (r - mean) ** 2, 0) / (n - 1);
+      vols[cnpj] = Math.sqrt(var_ * 252) * 100;  // % ao ano
+    }
+    let portVar = 0;
+    for (const ci of selected) {
+      for (const cj of selected) {
+        if (!vols[ci] || !vols[cj]) continue;
+        const rho = historyData.correlation[ci]?.[cj] ?? 0;
+        portVar += wNorm[ci] * wNorm[cj] * vols[ci] * vols[cj] * rho;
+      }
+    }
+    portVol = Math.sqrt(Math.max(0, portVar));
+  }
+
+  const excess = (cdiTarget != null) ? expReturn - cdiTarget : null;
+  const sharpe = (excess != null && portVol && portVol > 0) ? excess / portVol : null;
+  return { expReturn, cdiTarget, sharpe };
 }
 
 function calcDrawdown(f) {
@@ -815,6 +1212,8 @@ async function loadHistory() {
     historyData = await res.json();
     buildFundSelector();
     updatePortfolio();
+    document.getElementById('optRunBtn').disabled = false;
+    document.getElementById('optStatus').textContent = 'Pronto — escolha tamanho e objetivo, depois clique Otimizar.';
   } catch(e) {
     document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Erro ao carregar history.json</div>';
   }
@@ -1000,6 +1399,15 @@ function updatePortfolio() {
 
   const brlAlocado = patrimonio * total / 100;
 
+  // Retorno alvo do portfólio
+  const portTarget = calcPortfolioTargetReturn(selected, wNorm, historyData);
+  const fmtTarget  = v => v == null
+    ? '<span class="port-metric-val na">N/D</span>'
+    : `<span class="port-metric-val ${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+  const fmtSharpe  = v => v == null
+    ? '<span class="port-metric-val na">N/D</span>'
+    : `<span class="port-metric-val neu" style="font-size:0.95rem">${v.toFixed(2)}</span>`;
+
   // Métricas — grid 3 colunas, altura fixa
   document.getElementById('portMetrics').innerHTML = `
     <div class="port-metrics-grid">
@@ -1009,24 +1417,134 @@ function updatePortfolio() {
       <div class="port-metric"><div class="port-metric-label">Drawdown m\u00e1x</div>${fmtM(maxDD * 100, true)}</div>
       <div class="port-metric"><div class="port-metric-label">Drawdown atual</div>${fmtM(ddAtual * 100, true)}</div>
       <div class="port-metric"><div class="port-metric-label">Valor alocado</div><span class="port-metric-val neu">${patrimonio > 0 ? 'R$\u00a0' + brlAlocado.toLocaleString('pt-BR',{maximumFractionDigits:0}) : '—'}</span></div>
+      <div class="port-metric" style="border-top:1px solid var(--border);padding-top:0.65rem;margin-top:0.1rem;grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div>
+          <div class="port-metric-label">Retorno alvo <span style="font-size:0.52rem;opacity:0.65">(sem I.R.)</span></div>
+          ${fmtTarget(portTarget?.expReturn)}
+        </div>
+        <div>
+          <div class="port-metric-label">Sharpe</div>
+          ${fmtSharpe(portTarget?.sharpe)}
+        </div>
+      </div>
     </div>`;
 
   // Alocação
+  // Pre-compute vol and Sharpe for each selected fund
+  const fundVolMap    = {};
+  const fundSharpeMap = {};
+  const cdiForAlloc   = portTarget?.cdiTarget ?? 10;
+
+  for (const cnpj of selected) {
+    const fd = historyData.funds[cnpj];
+    if (!fd) continue;
+    const rets = fd.returns;
+    const n    = rets.length;
+    const mean = rets.reduce((a, b) => a + b, 0) / n;
+    const var_ = rets.reduce((a, r) => a + (r - mean) ** 2, 0) / (n - 1);
+    const volPct = Math.sqrt(var_ * 252) * 100;
+    fundVolMap[cnpj] = volPct;
+
+    const fData  = funds.find(f => f.cnpjFmt === cnpj);
+    const target = fData ? calcTargetReturn(fData) : null;
+    if (target && volPct > 0) {
+      fundSharpeMap[cnpj] = (target.value - cdiForAlloc) / volPct;
+    }
+  }
+
+  // Portfolio-level vol: σ_p = √(wᵀΣw)
+  let portVolAlloc = null;
+  if (historyData.correlation && selected.length > 1) {
+    let portVar = 0;
+    for (const ci of selected) {
+      for (const cj of selected) {
+        if (!fundVolMap[ci] || !fundVolMap[cj]) continue;
+        const rho = historyData.correlation[ci]?.[cj] ?? 0;
+        portVar  += wNorm[ci] * wNorm[cj] * fundVolMap[ci] * fundVolMap[cj] * rho;
+      }
+    }
+    portVolAlloc = Math.sqrt(Math.max(0, portVar));
+  } else if (selected.length === 1) {
+    portVolAlloc = fundVolMap[selected[0]] ?? null;
+  }
+  const portSharpeAlloc = (portVolAlloc && portVolAlloc > 0 && portTarget?.expReturn != null)
+    ? (portTarget.expReturn - cdiForAlloc) / portVolAlloc
+    : null;
+
+  const fmtVol = v => v == null
+    ? '<span class="port-alloc-vol" style="color:var(--muted)">—</span>'
+    : `<span class="port-alloc-vol">${v.toFixed(1)}%</span>`;
+  const fmtSharpeAlloc = v => v == null
+    ? '<span class="port-alloc-sharpe" style="color:var(--muted)">—</span>'
+    : `<span class="port-alloc-sharpe" style="color:${v >= 0 ? 'var(--green)' : 'var(--red)'}">${v.toFixed(2)}</span>`;
+
   const allocPanel = document.getElementById('portAllocPanel');
   if (selected.length > 0) {
     allocPanel.style.display = 'block';
-    document.getElementById('portAlloc').innerHTML = selected.map((cnpj, i) => {
-      const nome  = historyData.funds[cnpj].nome;
-      const pct   = weights[cnpj];
-      const brl   = patrimonio * pct / 100;
-      const color = PORT_COLORS[i % PORT_COLORS.length];
+
+    const rows = selected.map((cnpj, i) => {
+      const nome   = historyData.funds[cnpj].nome;
+      const pct    = weights[cnpj];
+      const brl    = patrimonio * pct / 100;
+      const color  = PORT_COLORS[i % PORT_COLORS.length];
+
+      // Retorno alvo individual
+      const fData  = funds.find(f => f.cnpjFmt === cnpj);
+      const target = fData ? calcTargetReturn(fData) : null;
+      let targetHtml;
+      if (!target) {
+        targetHtml = `<span class="port-alloc-target na">N/D</span>`;
+      } else {
+        const v    = target.value;
+        const cls  = v >= 0 ? 'pos' : 'neg';
+        const sign = v >= 0 ? '+' : '';
+        const tipLines = target.samples
+          .sort((a, b) => a[0] - b[0])
+          .map(([T, val]) => {
+            const label = T < 1.5 ? '12M' : T < 3.5 ? '36M' : T < 5.5 ? '60M' : `${T.toFixed(0)}A`;
+            return `${label}: ${val >= 0 ? '+' : ''}${val.toFixed(1)}%`;
+          }).join('  ·  ');
+        targetHtml = `<div class="alloc-target-wrap">
+          <span class="port-alloc-target ${cls}">${sign}${v.toFixed(1)}%</span>
+          <div class="alloc-target-tip">Ret. alvo (média pond. por período)
+${tipLines}</div>
+        </div>`;
+      }
+
+      const v_vol    = fundVolMap[cnpj]    ?? null;
+      const v_sharpe = fundSharpeMap[cnpj] ?? null;
+
       return `<div class="port-alloc-row">
         <span class="port-alloc-name" title="${nome}">${nome}</span>
         <div class="port-alloc-bar-wrap"><div class="port-alloc-bar" style="width:${pct}%;background:${color}"></div></div>
         <span class="port-alloc-pct">${pct}%</span>
         <span class="port-alloc-brl">${patrimonio > 0 ? 'R$\u00a0' + brl.toLocaleString('pt-BR',{maximumFractionDigits:0}) : ''}</span>
+        ${targetHtml}
+        ${fmtVol(v_vol)}
+        ${fmtSharpeAlloc(v_sharpe)}
       </div>`;
     }).join('');
+
+    // Total / portfolio summary row
+    const portRetAlloc  = portTarget?.expReturn ?? null;
+    const totBrl        = patrimonio * total / 100;
+    const totalRow = `<div class="port-alloc-total">
+      <span class="port-alloc-total-label">Portfólio</span>
+      <span></span>
+      <span class="port-alloc-total-val neu">${total}%</span>
+      <span class="port-alloc-total-val neu">${patrimonio > 0 ? 'R$\u00a0' + totBrl.toLocaleString('pt-BR',{maximumFractionDigits:0}) : '—'}</span>
+      <span class="port-alloc-total-val ${portRetAlloc != null ? (portRetAlloc >= 0 ? 'pos' : 'neg') : 'muted'}">
+        ${portRetAlloc != null ? (portRetAlloc >= 0 ? '+' : '') + portRetAlloc.toFixed(1) + '%' : '—'}
+      </span>
+      <span class="port-alloc-total-val ${portVolAlloc != null ? 'neu' : 'muted'}">
+        ${portVolAlloc != null ? portVolAlloc.toFixed(1) + '%' : '—'}
+      </span>
+      <span class="port-alloc-total-val ${portSharpeAlloc != null ? (portSharpeAlloc >= 0 ? 'pos' : 'neg') : 'muted'}">
+        ${portSharpeAlloc != null ? portSharpeAlloc.toFixed(2) : '—'}
+      </span>
+    </div>`;
+
+    document.getElementById('portAlloc').innerHTML = rows + totalRow;
   } else {
     allocPanel.style.display = 'none';
   }
@@ -1050,7 +1568,903 @@ function updatePortfolio() {
       return `<td style="background:${bg};color:${col}">${v.toFixed(2)}</td>`;
     }).join('') + '</tr>'
   ).join('');
-  document.getElementById('portCorr').innerHTML = `<table class="corr-table">${th}${rows}</table>`;
+  document.getElementById('portCorr').innerHTML = `<div class="corr-table-wrap"><table class="corr-table">${th}${rows}</table></div>`;
+
+  // Atualiza simulador de IR sempre que o portfólio mudar
+  renderIR();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SIMULADOR DE IR
+// ════════════════════════════════════════════════════════════════════════════
+
+// Tabela regressiva: alíquota marginal por prazo (dias desde o aporte)
+function trAliquota(diasAporte) {
+  if (diasAporte <= 180) return 0.225;
+  if (diasAporte <= 360) return 0.20;
+  if (diasAporte <= 720) return 0.175;
+  return 0.15;
+}
+
+// Formata BRL
+function fmtBRL(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function fmtBRLDec(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtPctIr(v) {
+  return v.toFixed(1) + '%';
+}
+
+// ── Simulação por fundo ───────────────────────────────────────────────────────
+//
+// RV (Renda Variável):
+//   - Sem come-cotas
+//   - IR no resgate: 15% sobre rendimento bruto total
+//
+// TR (Tabela Regressiva):
+//   - Come-cotas em mai e nov de cada ano (15% sobre rendimento desde último CC)
+//     O rendimento tributado vira nova base de custo para o próximo período
+//   - No resgate: alíquota complementar sobre o trecho desde o último CC
+//     * Prazo total do aporte > 720 dias → alíquota = 15% (complemento = 0%
+//       mas o trecho aberto desde o último CC *ainda não foi tributado*, então
+//       incide 15% sobre ele)
+//     * Prazo total ≤ 720 dias → alíquota da tabela regressiva sobre o trecho
+//   - Obs: "complemento" aqui significa o imposto sobre o último trecho aberto.
+//     Para prazo > 720d, esse trecho paga 15% diretamente (não é complemento de
+//     nada — é o imposto sobre um pedaço ainda não tributado).
+//
+// Simplificação aprovada: prazo para alíquota contado a partir do aporte inicial.
+
+function simularFundo(aporte, retornoAnual, trib, anosResgate) {
+  const r = retornoAnual / 100;  // taxa anual (retorno alvo)
+
+  if (trib === 'RV') {
+    // ── Renda Variável ──────────────────────────────────────────────────────
+    const valorBruto  = aporte * Math.pow(1 + r, anosResgate);
+    const rendimento  = valorBruto - aporte;
+    const ir          = rendimento * 0.15;
+    const valorLiq    = valorBruto - ir;
+    // RV: sem come-cotas → rendimento real = potencial → aliq efetiva = econômica = 15%
+    const aliqEfetiva  = rendimento > 0 ? (ir / rendimento) * 100 : 0;
+    const aliqEconomica = aliqEfetiva;  // idênticas para RV
+    return {
+      aporte, valorBruto, rendimentoBruto: rendimento,
+      irComeCotas: 0, irResgate: ir, irTotal: ir,
+      valorLiquido: valorLiq, aliqEfetiva, aliqEconomica,
+      detalhes: []
+    };
+  }
+
+  // ── Tabela Regressiva ─────────────────────────────────────────────────────
+  // Simula dia a dia com come-cotas em 31/mai e 30/nov
+  // Por eficiência: simula período a período (entre come-cotas)
+  //
+  // Estado: base = valor sobre o qual incide crescimento (após antecipações IR)
+  //         irComeCotas = IR total antecipado via come-cotas
+  //         patrimonioReal = valor real da carteira (cresce normalmente)
+  //
+  // A cada come-cotas:
+  //   rendimento_periodo = patrimonioReal_atual - base_atual
+  //   ir_cc = rendimento_periodo * 0.15
+  //   A receita federal "cobra" esse IR: o patrimônio líquido cai
+  //   patrimonioReal -= ir_cc
+  //   base = patrimonioReal (nova base para o próximo período)
+  //
+  // No resgate (entre dois come-cotas):
+  //   rendimento_trecho = patrimonioReal_final - base_apos_ultimo_cc
+  //   aliq_trecho = trAliquota(dias_totais_do_aporte)  [simplificação aprovada]
+  //   ir_resgate = rendimento_trecho * aliq_trecho
+  //   valorLiquido = patrimonioReal_final - ir_resgate
+
+  const hoje = new Date();
+  // Próximos come-cotas: 31/mai e 30/nov de cada ano, a partir de hoje
+  function proximosComeCotas(anosTotal) {
+    const datas = [];
+    const fimMs = hoje.getTime() + anosTotal * 365.25 * 86400000;
+    const ano0  = hoje.getFullYear();
+    for (let a = ano0; a <= ano0 + anosTotal + 1; a++) {
+      [new Date(a, 4, 31), new Date(a, 10, 30)].forEach(d => {
+        if (d > hoje && d.getTime() < fimMs) datas.push(d);
+      });
+    }
+    return datas.sort((a, b) => a - b);
+  }
+
+  const ccDatas    = proximosComeCotas(anosResgate);
+  const dataResgate = new Date(hoje.getTime() + anosResgate * 365.25 * 86400000);
+  const diasAporte  = anosResgate * 365.25;  // simplificação aprovada
+
+  let patrimonioReal = aporte;
+  let base           = aporte;  // base de custo atual (após última antecipação)
+  let irComeCotas    = 0;
+  const detalhes     = [];
+
+  // Crescimento de um período (taxa diária composta)
+  function crescer(valorInicial, dias) {
+    return valorInicial * Math.pow(1 + r, dias / 365.25);
+  }
+
+  let dataAtual = new Date(hoje);
+
+  for (const dataCC of ccDatas) {
+    const dias = (dataCC - dataAtual) / 86400000;
+    patrimonioReal = crescer(patrimonioReal, dias);
+    const rendPeriodo = patrimonioReal - base;
+    if (rendPeriodo > 0) {
+      const irCC = rendPeriodo * 0.15;
+      irComeCotas    += irCC;
+      patrimonioReal -= irCC;
+      detalhes.push({
+        tipo: 'come-cotas',
+        data: dataCC.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+        rendimento: rendPeriodo,
+        ir: irCC,
+        aliq: 15,
+      });
+    }
+    base      = patrimonioReal;
+    dataAtual = new Date(dataCC);
+  }
+
+  // Crescimento do último trecho (do último CC até o resgate)
+  const diasUltimoTrecho = (dataResgate - dataAtual) / 86400000;
+  patrimonioReal = crescer(patrimonioReal, diasUltimoTrecho);
+  const rendTrecho = patrimonioReal - base;
+
+  // Alíquota do trecho final: baseada no prazo total do aporte (simplificação)
+  const aliqTrecho  = trAliquota(diasAporte);
+  const irResgate   = Math.max(0, rendTrecho * aliqTrecho);
+
+  if (rendTrecho > 0) {
+    detalhes.push({
+      tipo: 'resgate',
+      data: dataResgate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+      rendimento: rendTrecho,
+      ir: irResgate,
+      aliq: aliqTrecho * 100,
+    });
+  }
+
+  const valorBruto   = patrimonioReal;
+  const irTotal      = irComeCotas + irResgate;
+  const valorLiquido = valorBruto - irResgate;  // come-cotas já saiu do patrimônio ao longo do tempo
+
+  const rendimentoReal = valorBruto - aporte;
+  const aliqEfetiva    = rendimentoReal > 0 ? (irTotal / rendimentoReal) * 100 : 0;
+  // aliqEconomica: quanto % do rendimento potencial (sem IR) o fisco consumiu.
+  // Usa ganho líquido do investidor = rendimentoReal - irResgate
+  // (come-cotas já saiu do patrimônio ao longo do tempo; irResgate sai no resgate)
+  // Isso captura o IR efetivo + o custo de oportunidade do capital antecipado.
+  const rendPotencial = aporte * Math.pow(1 + r, anosResgate) - aporte;
+  const ganhoLiquido  = rendimentoReal - irResgate;
+  const aliqEconomica = rendPotencial > 0 ? (1 - ganhoLiquido / rendPotencial) * 100 : 0;
+
+  return {
+    aporte, valorBruto, rendimentoBruto: rendimentoReal,
+    irComeCotas, irResgate, irTotal,
+    valorLiquido, aliqEfetiva, aliqEconomica, detalhes
+  };
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function onIrSlider() {
+  const anos = parseInt(document.getElementById('irSlider').value);
+  document.getElementById('irSliderVal').textContent = anos + (anos === 1 ? ' ano' : ' anos');
+  renderIR();
+}
+
+function renderIR() {
+  const el   = document.getElementById('irBody');
+  const anos = parseInt(document.getElementById('irSlider')?.value || 5);
+
+  const weights  = getWeights();
+  const selected = Object.keys(weights);
+  if (selected.length === 0 || !historyData) {
+    el.className = 'ir-empty';
+    el.innerHTML = 'Selecione fundos e pesos no portfólio acima';
+    return;
+  }
+
+  const total      = Object.values(weights).reduce((a, b) => a + b, 0);
+  const patrimonio = parsePatrimonio();
+
+  // Calcula simulação por fundo
+  const rows    = [];
+  let totAporte  = 0, totBruto = 0, totCC = 0, totResgate = 0, totTotal = 0, totLiq = 0, totRend = 0, totRendPot = 0;
+
+  for (const cnpj of selected) {
+    const w      = weights[cnpj] / total;
+    const aporte = patrimonio * w;
+    const meta   = FUND_META[cnpj] || {};
+    const trib   = meta.trib || 'RV';
+    const nome   = (historyData.funds[cnpj]?.nome) || meta.nome || cnpj;
+
+    // Retorno alvo do fundo
+    const fData  = funds.find(f => f.cnpjFmt === cnpj);
+    const target = fData ? calcTargetReturn(fData) : null;
+    const retorno = target ? target.value : null;
+
+    if (retorno === null) {
+      rows.push({ cnpj, nome, trib, aporte, sem_dados: true });
+      continue;
+    }
+
+    const sim = simularFundo(aporte, retorno, trib, anos);
+    rows.push({ cnpj, nome, trib, retorno, ...sim });
+
+    totAporte  += sim.aporte;
+    totBruto   += sim.valorBruto;
+    totRend    += sim.valorLiquido - sim.aporte;  // rendimento real líquido (após todo IR)
+    totCC      += sim.irComeCotas;
+    totResgate += sim.irResgate;
+    totTotal   += sim.irTotal;
+    totLiq     += sim.valorLiquido;
+    totRendPot += sim.aporte * Math.pow((1 + retorno / 100), anos) - sim.aporte;
+  }
+
+  const totAliqEf = totRend > 0 ? (totTotal / totRend) * 100 : 0;
+
+  // ── Build HTML ──
+  let html = `<div class="ir-table-wrap"><table class="ir-table">
+    <thead><tr>
+      <th>Fundo</th>
+      <th>Ret. alvo</th>
+      <th>Aporte</th>
+      <th>Valor bruto</th>
+      <th>IR total</th>
+      <th>Custo fiscal</th>
+      <th>Valor líquido</th>
+      <th>CAGR líquido</th>
+    </tr></thead><tbody>`;
+
+  for (const row of rows) {
+    const tribBadge = row.trib === 'RV'
+      ? '<span class="ir-trib-badge ir-trib-rv">RV</span>'
+      : '<span class="ir-trib-badge ir-trib-tr">TR</span>';
+
+    if (row.sem_dados) {
+      html += `<tr>
+        <td>${row.nome}${tribBadge}</td>
+        <td colspan="7" class="ir-val-muted" style="text-align:center">retorno alvo indisponível</td>
+      </tr>`;
+      continue;
+    }
+
+    html += `<tr>
+      <td>${row.nome}${tribBadge}</td>
+      <td class="ir-val-pos">+${row.retorno.toFixed(1)}%</td>
+      <td>${fmtBRL(row.aporte)}</td>
+      <td>${fmtBRL(row.valorBruto)}</td>
+      <td class="ir-val-neg">
+        ${row.trib === 'TR' && (row.irComeCotas > 0 || row.irResgate > 0)
+          ? `<div class="ir-custo-cell">
+               <span style="display:block">${fmtBRL(row.irTotal)}</span>
+               <div class="ir-custo-tip">
+                 <strong>Come-cotas (antecipações em mai/nov)</strong>
+                 ${row.irComeCotas > 0 ? fmtBRL(row.irComeCotas) : 'nenhum no período'}
+                 Pago ao longo do tempo, sobre cada período semestral.
+                 A alíquota é sempre 15% — mas o capital pago deixa de crescer.
+                 
+                 <strong>IR no resgate (último trecho)</strong>
+                 ${row.irResgate > 0 ? fmtBRL(row.irResgate) : 'zero — trecho final coincidiu com come-cotas'}
+                 Sobre o rendimento entre o último come-cotas e o resgate.
+                 Alíquota: 15% (prazo > 720 dias).
+               </div>
+             </div>`
+          : `<span>${fmtBRL(row.irTotal)}</span>`
+        }
+      </td>
+      <td>
+        ${row.trib === 'RV'
+          ? `<div class="ir-custo-cell">
+               <span class="ir-val-neg" style="font-family:'Courier New',monospace;font-weight:bold">${fmtPctIr(row.aliqEconomica)}</span>
+               <div class="ir-custo-tip">
+                 <strong>O que significa este número?</strong>
+                 De cada R$&nbsp;100 que esse fundo poderia ter rendido
+                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco
+                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.
+                 
+                 Para fundos RV sem come-cotas, isso equivale
+                 exatamente à alíquota aplicada: 15%.
+               </div>
+             </div>`
+          : `<div class="ir-custo-cell">
+               <span class="ir-custo-eco ir-val-neg">${fmtPctIr(row.aliqEconomica)}</span>
+               <div class="ir-custo-tip">
+                 <strong>O que significa este número?</strong>
+                 De cada R$&nbsp;100 que esse fundo poderia ter rendido
+                 sem nenhum imposto, R$&nbsp;${row.aliqEconomica.toFixed(1)} foram para o fisco
+                 e R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.
+                 
+                 <strong>Por que é maior que 15%?</strong>
+                 O come-cotas antecipa IR a cada semestre. O capital
+                 pago ao fisco deixa de crescer nos anos seguintes —
+                 esse custo de oportunidade é invisível mas real.
+                 Quanto maior o prazo e o retorno, maior o impacto.
+                 
+                 <strong>Compare com fundos RV:</strong> sem come-cotas,
+                 todo o capital cresce até o resgate e só então
+                 paga 15%. Por isso RV sempre mostra 15% aqui,
+                 independente do prazo.
+               </div>
+             </div>`
+        }
+      </td>
+      <td class="ir-val-pos">${fmtBRL(row.valorLiquido)}</td>
+      <td class="ir-val-pos">${row.aporte > 0 && row.valorLiquido > row.aporte
+        ? '+' + ((Math.pow(row.valorLiquido / row.aporte, 1 / anos) - 1) * 100).toFixed(1) + '%'
+        : '<span class="ir-val-muted">—</span>'
+      }</td>
+    </tr>`;
+  }
+
+  // Linha de total
+  const totRendPct = totAporte > 0 ? ((totBruto / totAporte - 1) * 100) : 0;
+  const totGanhoLiq = totLiq - totAporte;
+  const totCustoEco = totRendPot > 0 ? (1 - totGanhoLiq / totRendPot) * 100 : 0;
+  html += `<tr class="ir-total-row">
+    <td>Total portfólio</td>
+    <td>—</td>
+    <td>${fmtBRL(totAporte)}</td>
+    <td>${fmtBRL(totBruto)}</td>
+    <td class="ir-val-neg">
+      ${totCC > 0
+        ? `<div class="ir-custo-cell">
+             <span style="display:block">${fmtBRL(totTotal)}</span>
+             <div class="ir-custo-tip">
+               <strong>Come-cotas (antecipações)</strong>
+               ${fmtBRL(totCC)}
+               Soma de todos os come-cotas pagos pelos fundos TR.
+               
+               <strong>IR no resgate</strong>
+               ${totResgate > 0 ? fmtBRL(totResgate) : 'zero'}
+             </div>
+           </div>`
+        : `<span>${fmtBRL(totTotal)}</span>`
+      }
+    </td>
+    <td>
+      <div class="ir-custo-cell">
+        <span class="ir-custo-eco ir-val-neg">${fmtPctIr(totCustoEco)}</span>
+        <div class="ir-custo-tip">
+          <strong>Custo fiscal do portfólio</strong>
+          De cada R$&nbsp;100 de potencial deste portfólio,
+          R$&nbsp;${totCustoEco.toFixed(1)} de cada R$&nbsp;100 foram para o fisco.
+          
+          É a média ponderada pelo aporte de cada fundo.
+          Fundos RV sempre contribuem com 15%;
+          fundos TR contribuem com mais, dependendo
+          do prazo e do retorno (quanto maior, pior o come-cotas).
+        </div>
+      </div>
+    </td>
+    <td class="ir-val-pos">${fmtBRL(totLiq)}</td>
+    <td class="ir-val-pos">${totAporte > 0 && totLiq > totAporte
+      ? '+' + ((Math.pow(totLiq / totAporte, 1 / anos) - 1) * 100).toFixed(1) + '%'
+      : '<span class="ir-val-muted">—</span>'
+    }</td>
+  </tr>`;
+
+  html += `</tbody></table></div>
+  <div class="ir-legend">
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> RV
+      <div class="ir-custo-tip">
+        <strong>Renda Variável — tributação no resgate</strong>
+        Sem come-cotas. O capital cresce integralmente até o resgate.
+        No dia do resgate: 15% sobre o rendimento total.
+        
+        Resultado: a base de cálculo do IR é máxima,
+        mas todo o capital trabalhou por mais tempo.
+      </div>
+    </div>
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> TR
+      <div class="ir-custo-tip">
+        <strong>Tabela Regressiva — come-cotas semestral</strong>
+        Em maio e novembro de cada ano, 15% sobre o rendimento
+        do período é antecipado ao fisco. O capital pago deixa
+        de crescer nos anos seguintes.
+        
+        No resgate, o trecho desde o último come-cotas paga:
+        ≤ 180 dias → 22,5% &nbsp;·&nbsp; ≤ 360d → 20%
+        ≤ 720 dias → 17,5% &nbsp;·&nbsp; &gt; 720d → 15%
+        
+        Quanto maior o prazo e o retorno, maior o custo
+        invisível do come-cotas antecipado.
+      </div>
+    </div>
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> Custo fiscal
+      <div class="ir-custo-tip">
+        <strong>O que é o custo fiscal?</strong>
+        De cada R$&nbsp;100 que o fundo poderia ter rendido
+        sem nenhum imposto, quanto foi para o fisco?
+        
+        Inclui o IR efetivamente pago <em>e</em> o custo de
+        oportunidade do capital antecipado via come-cotas.
+        
+        RV sempre mostra 15% — é a alíquota exata aplicada.
+        TR mostra mais: o come-cotas destrói rendimento
+        composto, e esse custo cresce com o prazo.
+      </div>
+    </div>
+    <div class="ir-pill">
+      <span class="ir-pill-icon">ⓘ</span> Ret. alvo
+      <div class="ir-custo-tip">
+        <strong>Como é calculado o retorno alvo?</strong>
+        Média ponderada dos CAGRs históricos do fundo,
+        onde o peso de cada período = sua duração em anos.
+        
+        12M → peso 1 &nbsp;·&nbsp; 36M → peso 3 &nbsp;·&nbsp; 60M → peso 5
+        Inception → peso = anos desde o início (se &gt; 5,5a)
+        
+        Racional: períodos mais longos têm menor ruído
+        amostral e recebem maior credibilidade estatística.
+        
+        É uma estimativa — não uma garantia de retorno futuro.
+      </div>
+    </div>
+  </div>`;
+
+  el.className = '';
+  el.innerHTML = html;
+}
+
+// ── Tooltip positioning (position:fixed, never clips) ────────────────────────
+document.addEventListener('mousemove', e => {
+  document.querySelectorAll('.ir-custo-tip, .alloc-target-tip').forEach(tip => {
+    if (tip.style.opacity === '1' || getComputedStyle(tip).opacity > 0) {
+      const tw = tip.offsetWidth  || 240;
+      const th = tip.offsetHeight || 80;
+      const margin = 12;
+      let x = e.clientX + margin;
+      let y = e.clientY + margin;
+      // Flip left if too close to right edge
+      if (x + tw > window.innerWidth  - margin) x = e.clientX - tw - margin;
+      // Flip up if too close to bottom edge
+      if (y + th > window.innerHeight - margin) y = e.clientY - th - margin;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    }
+  });
+});
+
+// Show/hide on mouseenter/mouseleave (complement CSS :hover for fixed tips)
+document.addEventListener('mouseover', e => {
+  const cell = e.target.closest('.ir-custo-cell, .alloc-target-wrap');
+  if (!cell) return;
+  const tip = cell.querySelector('.ir-custo-tip, .alloc-target-tip');
+  if (!tip) return;
+  tip.style.opacity   = '1';
+  tip.style.transform = 'translateY(0)';
+});
+document.addEventListener('mouseout', e => {
+  const cell = e.target.closest('.ir-custo-cell, .alloc-target-wrap');
+  if (!cell) return;
+  // Only hide if we're leaving the cell entirely
+  if (cell.contains(e.relatedTarget)) return;
+  const tip = cell.querySelector('.ir-custo-tip, .alloc-target-tip');
+  if (!tip) return;
+  tip.style.opacity   = '0';
+  tip.style.transform = 'translateY(4px)';
+});
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// OTIMIZADOR DE CARTEIRA
+// ════════════════════════════════════════════════════════════════════════════
+
+let optN      = 3;
+let optObj    = 'sharpe';
+let optMaxW   = 1.0;   // 1.0 = no constraint (100%)
+let optMinW   = 0.01;  // 1% default minimum weight
+
+function setOptN(n) {
+  optN = n;
+  ['3','5','10'].forEach(k =>
+    document.getElementById('optN' + k).classList.toggle('active', +k === n)
+  );
+  validateOptConstraints();
+}
+function setOptObj(obj) {
+  optObj = obj;
+  ['sharpe','return','vol'].forEach(k =>
+    document.getElementById('optObj' + k.charAt(0).toUpperCase() + k.slice(1))
+      .classList.toggle('active', k === obj)
+  );
+}
+
+function onOptMaxWSlider() {
+  const v = parseInt(document.getElementById('optMaxWSlider').value);
+  optMaxW = v / 100;
+  document.getElementById('optMaxWVal').textContent = v + '%';
+  document.getElementById('optMaxWNote').textContent = v === 100 ? '(sem restrição)' : '';
+  validateOptConstraints();
+}
+
+function onOptMinWSlider() {
+  // Slider range 10–300 maps to 1.0%–30.0% in steps of 0.1%
+  const raw  = parseInt(document.getElementById('optMinWSlider').value);
+  const pct  = raw / 10;               // e.g. 10→1.0%, 35→3.5%, 300→30.0%
+  optMinW    = pct / 100;
+  document.getElementById('optMinWVal').textContent = pct.toFixed(1) + '%';
+  document.getElementById('optMinWNote').textContent = pct === 1.0 ? '(padrão)' : '';
+  validateOptConstraints();
+}
+
+function validateOptConstraints() {
+  const warn    = document.getElementById('optConstraintWarn');
+  const runBtn  = document.getElementById('optRunBtn');
+  // infeasible if: minW * N > 1  OR  minW > maxW
+  const infeasible = (optMinW * optN > 1.0 + 1e-9) || (optMinW > optMaxW + 1e-9);
+  warn.style.display   = infeasible ? 'block' : 'none';
+  // Still allow running — optimizer skips infeasible combos gracefully
+  if (infeasible) {
+    warn.textContent = optMinW > optMaxW
+      ? '⚠ peso mínimo maior que o máximo'
+      : `⚠ mín. × ${optN} fundos = ${(optMinW * optN * 100).toFixed(0)}% > 100% — restrição incompatível`;
+  }
+}
+
+// ── Álgebra linear básica (vetores e matrizes, sem dependências) ──────────────
+
+// Produto matriz-vetor
+function matVec(M, v) {
+  return M.map(row => row.reduce((s, x, j) => s + x * v[j], 0));
+}
+// Produto vetor-vetor (dot)
+function dot(a, b) { return a.reduce((s, x, i) => s + x * b[i], 0); }
+
+// Gauss-Jordan: inverte matriz n×n, retorna null se singular
+function invertMatrix(M) {
+  const n   = M.length;
+  const aug = M.map((row, i) => {
+    const r = [...row];
+    for (let j = 0; j < n; j++) r.push(i === j ? 1 : 0);
+    return r;
+  });
+  for (let col = 0; col < n; col++) {
+    // Pivot
+    let maxRow = col;
+    for (let row = col + 1; row < n; row++)
+      if (Math.abs(aug[row][col]) > Math.abs(aug[maxRow][col])) maxRow = row;
+    [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
+    if (Math.abs(aug[col][col]) < 1e-12) return null;  // singular
+    const pivot = aug[col][col];
+    for (let j = 0; j < 2 * n; j++) aug[col][j] /= pivot;
+    for (let row = 0; row < n; row++) {
+      if (row === col) continue;
+      const factor = aug[row][col];
+      for (let j = 0; j < 2 * n; j++) aug[row][j] -= factor * aug[col][j];
+    }
+  }
+  return aug.map(row => row.slice(n));
+}
+
+// ── Covariância a partir de retornos diários ──────────────────────────────────
+// Retorna matriz k×k de covariâncias anualizadas (×252) em (%²)
+function covMatrix(cnpjs, historyData) {
+  const k    = cnpjs.length;
+  const rets = cnpjs.map(c => historyData.funds[c].returns);
+  const n    = rets[0].length;
+  const means = rets.map(r => r.reduce((a, b) => a + b, 0) / n);
+  const cov   = Array.from({length: k}, () => new Array(k).fill(0));
+  for (let i = 0; i < k; i++)
+    for (let j = i; j < k; j++) {
+      let s = 0;
+      for (let t = 0; t < n; t++)
+        s += (rets[i][t] - means[i]) * (rets[j][t] - means[j]);
+      cov[i][j] = cov[j][i] = (s / (n - 1)) * 252 * 10000; // (%²) anualizado
+    }
+  return cov;
+}
+
+// ── Volatilidade do portfólio dado peso w e cov ──────────────────────────────
+function portVol(w, cov) {
+  // σ² = wᵀ Σ w  (em %²) → σ em %
+  let v2 = 0;
+  for (let i = 0; i < w.length; i++)
+    for (let j = 0; j < w.length; j++)
+      v2 += w[i] * w[j] * cov[i][j];
+  return Math.sqrt(Math.max(0, v2));
+}
+
+// ── Mínima variância analítico ────────────────────────────────────────────────
+// w* = Σ⁻¹ · 1 / (1ᵀ · Σ⁻¹ · 1)
+// Mínima variância long-only via remoção iterativa de ativos com peso negativo.
+// Mesma abordagem do max-Sharpe: garante solução exata para o subconjunto ativo.
+function minVolWeights(cov) {
+  const n      = cov.length;
+  let active   = cov.map((_, i) => i);
+
+  for (let iter = 0; iter < n; iter++) {
+    const k      = active.length;
+    if (k === 0) return null;
+
+    const subCov = active.map(i => active.map(j => cov[i][j]));
+    const inv    = invertMatrix(subCov);
+    if (!inv) return null;
+
+    const ones  = new Array(k).fill(1);
+    const inv1  = matVec(inv, ones);
+    const denom = inv1.reduce((a, b) => a + b, 0);
+    if (Math.abs(denom) < 1e-12) return null;
+
+    const wSub = inv1.map(x => x / denom);
+
+    if (wSub.every(x => x >= -1e-10)) {
+      const wPos = wSub.map(x => Math.max(0, x));
+      const tot  = wPos.reduce((a, b) => a + b, 0);
+      if (tot <= 0) return null;
+      const wFull = new Array(n).fill(0);
+      active.forEach((origIdx, k) => { wFull[origIdx] = wPos[k] / tot; });
+      return wFull;
+    }
+
+    // Remove asset with most negative weight
+    const minK = wSub.indexOf(Math.min(...wSub));
+    active.splice(minK, 1);
+  }
+  return null;
+}
+
+// ── Máximo Sharpe (tangency portfolio) ───────────────────────────────────────
+// Solução analítica: w* = Σ⁻¹ · (μ - rf) / (1ᵀ · Σ⁻¹ · (μ - rf))
+// μ[i] = retorno alvo do fundo i (%)
+// rf    = CDI alvo (%)
+// Se pesos negativos → clip + renormalise (restrição long-only)
+// Máximo Sharpe long-only via Critical Line (remoção iterativa de ativos negativos).
+// Quando a solução analítica Σ⁻¹(μ−rf) tem pesos negativos, remove o ativo
+// com peso mais negativo e re-resolve no subconjunto restante.
+// Converge para o verdadeiro portfólio tangente long-only.
+// Nota: garante ótimo local da subárea ativa; casos com múltiplos ativos
+// borderline simultâneos podem precisar de QP completo, mas são raros
+// na prática com fundos de ações brasileiros.
+function maxSharpeWeights(cnpjs, mus, cdiTarget, cov) {
+  const n      = mus.length;
+  let active   = mus.map((_, i) => i);  // índices dos ativos ativos
+
+  for (let iter = 0; iter < n; iter++) {
+    const k       = active.length;
+    if (k === 0) return null;
+
+    // Sub-problema: extrair sub-matriz e sub-vetor
+    const subCov = active.map(i => active.map(j => cov[i][j]));
+    const subMus = active.map(i => mus[i]);
+    const excess = subMus.map(m => m - cdiTarget);
+    if (excess.every(e => e <= 0)) return null;  // nenhum ativo bate o CDI
+
+    const inv = invertMatrix(subCov);
+    if (!inv) return null;
+
+    const ie    = matVec(inv, excess);
+    const denom = ie.reduce((a, b) => a + b, 0);
+    if (Math.abs(denom) < 1e-12) return null;
+
+    const wSub = ie.map(x => x / denom);
+
+    // Todos não-negativos → solução encontrada
+    if (wSub.every(x => x >= -1e-10)) {
+      const wPos = wSub.map(x => Math.max(0, x));
+      const tot  = wPos.reduce((a, b) => a + b, 0);
+      if (tot <= 0) return null;
+      // Expande de volta para n dimensões
+      const wFull = new Array(n).fill(0);
+      active.forEach((origIdx, k) => { wFull[origIdx] = wPos[k] / tot; });
+      return wFull;
+    }
+
+    // Remove o ativo com peso mais negativo e repete
+    const minK = wSub.indexOf(Math.min(...wSub));
+    active.splice(minK, 1);
+  }
+  return null;
+}
+
+// ── Máximo retorno: sem restrição → concentrado no fundo de maior retorno
+// Com k fundos: ordena por retorno alvo, pega top-k, otimiza Sharpe entre eles
+// (mais interessante que simplesmente alocar 100% no melhor)
+// Se não conseguir Sharpe, usa pesos uniformes
+function maxReturnWeights(mus) {
+  // Aloca mais nos fundos de maior retorno (proporcional ao excesso sobre o mínimo)
+  const minMu = Math.min(...mus);
+  const excess = mus.map(m => Math.max(0, m - minMu + 0.01));
+  const tot    = excess.reduce((a, b) => a + b, 0);
+  return excess.map(x => x / tot);
+}
+
+// ── Gera todas as combinações C(n, k) ────────────────────────────────────────
+function* combinations(arr, k) {
+  if (k === 0) { yield []; return; }
+  for (let i = 0; i <= arr.length - k; i++)
+    for (const rest of combinations(arr.slice(i + 1), k - 1))
+      yield [arr[i], ...rest];
+}
+
+// ── Avalia um portfólio (w, cnpjs) e retorna métricas ────────────────────────
+function evalPortfolio(w, cnpjs, mus, cdiTarget, cov) {
+  const ret = dot(w, mus);
+  const vol = portVol(w, cov);
+  const sharpe = vol > 0 ? (ret - cdiTarget) / vol : -Infinity;
+  return { w, cnpjs, ret, vol, sharpe };
+}
+
+// ── Aplica carteira otimizada na UI ──────────────────────────────────────────
+function applyOptimizedPortfolio(cnpjs, weights) {
+  // Desmarca todos
+  document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
+    chk.checked = false;
+    const sl = document.getElementById('sl-' + i);
+    const wi = document.getElementById('wi-' + i);
+    const row = document.getElementById('frow-' + i);
+    if (sl) { sl.value = 0; sl.disabled = true; }
+    if (wi) { wi.value = '0%'; wi.disabled = true; }
+    if (row) row.classList.add('inactive');
+  });
+
+  // Arredondamento inteligente: garante mínimo 1% para cada fundo da combinação,
+  // depois redistribui o excesso tirando 1% por vez dos maiores.
+  const k = weights.length;
+  // Passo 1: arredonda normalmente
+  let rounded = weights.map(w => Math.round(w * 100));
+  // Passo 2: força mínimo de 1% para todos (são fundos escolhidos pelo otimizador)
+  rounded = rounded.map(v => Math.max(1, v));
+  // Passo 3: ajusta soma para 100, tirando 1% dos maiores pesos iterativamente
+  let total = rounded.reduce((a, b) => a + b, 0);
+  while (total > 100) {
+    const maxIdx = rounded.indexOf(Math.max(...rounded));
+    if (rounded[maxIdx] <= 1) break;  // não pode tirar mais
+    rounded[maxIdx]--;
+    total--;
+  }
+  // Se ficou abaixo de 100 (raro), adiciona ao maior
+  if (total < 100) {
+    const maxIdx = rounded.indexOf(Math.max(...rounded));
+    rounded[maxIdx] += (100 - total);
+  }
+
+  document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
+    const idx = cnpjs.indexOf(chk.dataset.cnpj);
+    if (idx === -1) return;
+    const pct = rounded[idx];
+    if (pct <= 0) return;
+    chk.checked = true;
+    const sl = document.getElementById('sl-' + i);
+    const wi = document.getElementById('wi-' + i);
+    const row = document.getElementById('frow-' + i);
+    if (sl) { sl.value = pct; sl.disabled = false; }
+    if (wi) { wi.value = pct + '%'; wi.disabled = false; }
+    if (row) row.classList.remove('inactive');
+  });
+
+  updatePortfolio();
+}
+
+// ── Entrada principal ─────────────────────────────────────────────────────────
+function runOptimizer() {
+  if (!historyData) return;
+
+  const btn    = document.getElementById('optRunBtn');
+  const status = document.getElementById('optStatus');
+  btn.disabled = true;
+  status.textContent = 'Calculando…';
+
+  // Defer para não bloquear o render
+  setTimeout(() => {
+    try {
+      const allCnpjs = Object.keys(historyData.funds);
+      const k        = optN;
+
+      // Retornos alvo por fundo
+      const muMap = {};
+      for (const cnpj of allCnpjs) {
+        const fData = funds.find(f => f.cnpjFmt === cnpj);
+        const t     = fData ? calcTargetReturn(fData) : null;
+        muMap[cnpj] = t ? t.value : null;
+      }
+
+      // CDI alvo
+      let cdiTarget = 10;  // fallback
+      if (cdi) {
+        const s = [];
+        if (cdi.cagr12 != null) s.push([1, cdi.cagr12]);
+        if (cdi.cagr36 != null) s.push([3, cdi.cagr36]);
+        if (cdi.cagr60 != null) s.push([5, cdi.cagr60]);
+        if (s.length) cdiTarget = s.reduce((a,[T,v]) => a + T*v, 0) / s.reduce((a,[T]) => a+T, 0);
+      }
+
+      // Filtra fundos com dados completos
+      const validCnpjs = allCnpjs.filter(c => muMap[c] != null);
+
+      let best = null;
+      let nCombos = 0;
+
+      for (const combo of combinations(validCnpjs, k)) {
+        nCombos++;
+        const mus = combo.map(c => muMap[c]);
+        const cov = covMatrix(combo, historyData);
+
+        let w = null;
+        if (optObj === 'vol') {
+          w = minVolWeights(cov);
+        } else if (optObj === 'sharpe') {
+          w = maxSharpeWeights(combo, mus, cdiTarget, cov);
+          if (!w) w = minVolWeights(cov);  // fallback
+        } else {
+          // Máx. retorno: primeiro tenta Sharpe, depois proporcional
+          w = maxSharpeWeights(combo, mus, cdiTarget, cov);
+          if (!w) w = maxReturnWeights(mus);
+        }
+        if (!w) w = new Array(k).fill(1 / k);  // fallback uniforme
+
+        // Enforce min/max weight constraints
+        // Feasibility: minW*k ≤ 1, maxW*k ≥ 1, minW ≤ maxW
+        const feasible = (optMinW * k <= 1.0 + 1e-9)
+                      && (optMaxW * k >= 1.0 - 1e-9)
+                      && (optMinW  <= optMaxW + 1e-9);
+        if (!feasible) { continue; }  // skip infeasible combination
+
+        if (optMaxW < 1.0 || optMinW > 1e-9) {
+          // Alternating projections onto {sum=1} and box [minW, maxW]
+          // Bug-free version: never renorm after clip (that can violate maxW)
+          for (let iter = 0; iter < 50; iter++) {
+            // Project onto sum=1: add uniform slack
+            const slack = (1.0 - w.reduce((a,b) => a+b, 0)) / k;
+            w = w.map(x => x + slack);
+            // Project onto box
+            const prev = [...w];
+            w = w.map(x => Math.min(optMaxW, Math.max(optMinW, x)));
+            if (w.every((x, i) => Math.abs(x - prev[i]) < 1e-10)) break;
+          }
+          // Final redistribution to guarantee sum=1 while respecting bounds
+          for (let iter = 0; iter < 50; iter++) {
+            const diff = 1.0 - w.reduce((a, b) => a + b, 0);
+            if (Math.abs(diff) < 1e-12) break;
+            const freeIdx = diff > 0
+              ? w.map((x, i) => x < optMaxW - 1e-12 ? i : -1).filter(i => i >= 0)
+              : w.map((x, i) => x > optMinW + 1e-12 ? i : -1).filter(i => i >= 0);
+            if (freeIdx.length === 0) break;
+            const per = diff / freeIdx.length;
+            freeIdx.forEach(i => { w[i] += per; });
+            w = w.map(x => Math.min(optMaxW, Math.max(optMinW, x)));
+          }
+        }
+
+        const p = evalPortfolio(w, combo, mus, cdiTarget, cov);
+
+        if (!best) { best = p; continue; }
+
+        const better =
+          optObj === 'vol'    ? p.vol    < best.vol    :
+          optObj === 'sharpe' ? p.sharpe > best.sharpe :
+          /* return */          p.ret    > best.ret;
+
+        if (better) best = p;
+      }
+
+      if (!best) {
+        status.textContent = 'Não foi possível otimizar.';
+        btn.disabled = false;
+        return;
+      }
+
+      const objLabel = optObj === 'vol' ? `vol. ${best.vol.toFixed(1)}%` :
+                       optObj === 'sharpe' ? `Sharpe ${best.sharpe.toFixed(2)}` :
+                       `retorno ${best.ret.toFixed(1)}%`;
+      status.textContent =
+        `${nCombos} combinações avaliadas · melhor: ${objLabel} · ` +
+        best.cnpjs.map((c,i) => `${historyData.funds[c].nome.split(' ')[0]} ${Math.round(best.w[i]*100)}%`).join(' · ');
+
+      applyOptimizedPortfolio(best.cnpjs, best.w);
+
+    } catch(e) {
+      document.getElementById('optStatus').textContent = 'Erro: ' + e.message;
+    }
+    btn.disabled = false;
+  }, 20);
 }
 
 updateHeaders();
