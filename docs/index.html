@@ -580,7 +580,7 @@
           <div class="port-section-label">Alocação</div>
         </div>
         <div class="port-alloc-header">
-          <span>Fundo</span><span></span><span>Peso</span><span>Valor</span><span>Ret. alvo (a.IR)</span>
+          <span>Fundo</span><span></span><span>Peso</span><span>Valor</span><span>Ret. alvo</span>
         </div>
         <div id="portAlloc"></div>
       </div>
@@ -1282,7 +1282,7 @@ function updatePortfolio() {
       <div class="port-metric"><div class="port-metric-label">Valor alocado</div><span class="port-metric-val neu">${patrimonio > 0 ? 'R$\u00a0' + brlAlocado.toLocaleString('pt-BR',{maximumFractionDigits:0}) : '—'}</span></div>
       <div class="port-metric" style="border-top:1px solid var(--border);padding-top:0.65rem;margin-top:0.1rem;grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:0">
         <div>
-          <div class="port-metric-label">Retorno alvo <span style="font-size:0.52rem;opacity:0.65">(antes do IR)</span></div>
+          <div class="port-metric-label">Retorno alvo <span style="font-size:0.52rem;opacity:0.65">(sem I.R.)</span></div>
           ${fmtTarget(portTarget?.expReturn)}
         </div>
         <div>
@@ -1600,7 +1600,7 @@ function renderIR() {
   let html = `<div class="ir-table-wrap"><table class="ir-table">
     <thead><tr>
       <th>Fundo</th>
-      <th>Ret. alvo (a.IR)</th>
+      <th>Ret. alvo</th>
       <th>Aporte</th>
       <th>Valor bruto</th>
       <th>Come-cotas</th>
@@ -1641,13 +1641,12 @@ function renderIR() {
                <span class="ir-custo-eco ir-val-neg">${fmtPctIr(row.aliqEconomica)}</span>
                <span class="ir-custo-real">${fmtPctIr(row.aliqEfetiva)} s/ rend. real</span>
                <div class="ir-custo-tip">
-                 <strong>Custo fiscal econômico</strong><br>
-                 (IR total + custo de oportunidade) / rend. potencial sem IR<br>
-                 Comparável diretamente com fundos RV (base igual)<br>
+                 De cada R$&nbsp;100 que esse fundo poderia ter rendido sem nenhum imposto,<br>
+                 R$&nbsp;${fmtPctIr(row.aliqEconomica).replace('%','')} foram para o fisco — R$&nbsp;${(100 - row.aliqEconomica).toFixed(1)} ficaram com você.<br>
                  <br>
-                 <strong>S/ rendimento real: ${fmtPctIr(row.aliqEfetiva)}</strong><br>
-                 IR efetivamente pago / rend. real (já degradado pelos come-cotas)<br>
-                 Não comparável entre RV e TR
+                 Inclui tanto o IR efetivamente pago (${fmtPctIr(row.aliqEfetiva)}) quanto<br>
+                 o custo de oportunidade do come-cotas antecipado.<br>
+                 Base comparável com fundos RV (que pagam 15%).
                </div>
              </div>`
         }
@@ -1675,8 +1674,9 @@ function renderIR() {
         <span class="ir-custo-eco ir-val-neg">${fmtPctIr(totRendPot > 0 ? (1 - totRend/totRendPot)*100 : 0)}</span>
         <span class="ir-custo-real">${fmtPctIr(totAliqEf)} s/ rend. real</span>
         <div class="ir-custo-tip">
-          Custo fiscal econômico do portfólio<br>
-          Média ponderada pelos aportes
+          De cada R$&nbsp;100 de potencial do portfólio,<br>
+          ${fmtPctIr(totRendPot > 0 ? (1 - totRend/totRendPot)*100 : 0).replace('%','')} foram para o fisco.<br>
+          Média ponderada pelos aportes de cada fundo.
         </div>
       </div>
     </td>
