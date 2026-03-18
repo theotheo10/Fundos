@@ -169,49 +169,201 @@
   .tab-pane.active { display: block; }
 
   /* ── Portfolio ── */
-  .port-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-  .port-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
-  .port-panel-title { font-family: 'Courier New', monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent); margin-bottom: 1rem; font-weight: bold; }
-  .fund-selector { display: flex; flex-direction: column; gap: 0.7rem; }
-  .fund-row-port { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.8rem; }
-  .fund-check-label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; }
-  .fund-check-label input[type=checkbox] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
-  .fund-slider { -webkit-appearance: none; width: 100px; height: 3px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; }
-  .fund-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); cursor: pointer; }
-  .fund-slider:disabled { opacity: 0.3; cursor: not-allowed; }
-  .fund-weight-pct { font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--text); width: 36px; text-align: right; }
-  .port-patrimonio { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.8rem; }
-  .port-patrimonio label { font-family: 'Courier New', monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
-  .port-patrimonio input[type=text] { font-family: 'Courier New', monospace; font-size: 0.82rem; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); width: 150px; outline: none; }
-  .port-patrimonio input[type=text]:focus { border-color: var(--accent); }
-  .port-total-bar { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; font-family: 'Courier New', monospace; font-size: 0.68rem; color: var(--muted); }
-  .port-total-bar .bar-track { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
-  .port-total-bar .bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.2s, background 0.2s; }
-  .port-total-bar .bar-fill.over { background: var(--red); }
-  .port-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem 1.2rem; margin-bottom: 1.2rem; }
-  .port-metric-label { font-family: 'Courier New', monospace; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 2px; }
-  .port-metric-val { font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: bold; }
+  .port-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 0;
+    min-height: 600px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  /* Coluna esquerda — composição */
+  .port-left {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+  .port-header {
+    padding: 1rem 1.2rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .port-section-label {
+    font-family: 'Courier New', monospace;
+    font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--muted); margin-bottom: 0.7rem;
+  }
+  .port-patrimonio-row {
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .port-patrimonio-row label {
+    font-family: 'Courier New', monospace; font-size: 0.62rem;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    white-space: nowrap;
+  }
+  .port-patrimonio-row input {
+    font-family: 'Courier New', monospace; font-size: 0.88rem;
+    padding: 4px 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text);
+    width: 140px; outline: none; border-radius: 4px;
+  }
+  .port-patrimonio-row input:focus { border-color: var(--accent); }
+
+  /* Barra de total */
+  .port-bar-row {
+    display: flex; align-items: center; gap: 0.8rem;
+    padding: 0.7rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+  }
+  .port-bar-track {
+    flex: 1; height: 2px; background: var(--border); overflow: hidden;
+  }
+  .port-bar-fill {
+    height: 100%; background: var(--accent);
+    transition: width 0.15s, background 0.15s;
+  }
+  .port-bar-fill.over { background: var(--red); }
+  .port-bar-label { color: var(--muted); white-space: nowrap; min-width: 70px; text-align: right; }
+  .port-bar-label.full { color: var(--green); }
+  .port-bar-label.over { color: var(--red); }
+
+  /* Lista de fundos */
+  .fund-selector { flex: 1; overflow-y: auto; }
+  .fund-row-port {
+    display: grid;
+    grid-template-columns: 16px 1fr 52px 52px;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .fund-row-port:last-child { border-bottom: none; }
+  .fund-row-port:hover { background: var(--bg); }
+  .fund-row-port.inactive { opacity: 0.45; }
+  .fund-row-port input[type=checkbox] {
+    accent-color: var(--accent); width: 13px; height: 13px; cursor: pointer; flex-shrink: 0;
+  }
+  .fund-row-name {
+    font-size: 0.8rem; cursor: pointer; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Slider de peso */
+  .fund-slider {
+    -webkit-appearance: none; width: 100%; height: 2px;
+    background: var(--border); outline: none; cursor: pointer;
+    border-radius: 1px;
+  }
+  .fund-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+  .fund-slider:disabled { opacity: 0.2; cursor: not-allowed; }
+  /* Input numérico de peso */
+  .fund-weight-input {
+    font-family: 'Courier New', monospace; font-size: 0.75rem;
+    width: 44px; padding: 3px 4px; text-align: right;
+    border: 1px solid transparent; border-radius: 3px;
+    background: transparent; color: var(--text); outline: none;
+  }
+  .fund-weight-input:focus {
+    border-color: var(--accent); background: var(--bg);
+  }
+  .fund-weight-input:disabled { opacity: 0.2; }
+
+  /* Coluna direita */
+  .port-right {
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Painel de métricas */
+  .port-metrics-panel {
+    padding: 1.2rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .port-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem 1rem;
+  }
+  .port-metric {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+  }
+  .port-metric-label {
+    font-family: 'Courier New', monospace; font-size: 0.54rem;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 3px;
+  }
+  .port-metric-val {
+    font-family: 'Courier New', monospace; font-size: 1.05rem; font-weight: bold; line-height: 1;
+  }
   .port-metric-val.pos { color: var(--green); }
   .port-metric-val.neg { color: var(--red); }
-  .port-metric-val.na  { color: var(--muted); font-size: 0.8rem; font-weight: normal; }
-  .port-alloc { display: flex; flex-direction: column; gap: 0.5rem; }
-  .port-alloc-row { display: flex; align-items: center; gap: 0.7rem; font-size: 0.78rem; }
-  .port-alloc-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .port-alloc-bar { height: 100%; border-radius: 3px; transition: width 0.3s; }
-  .port-alloc-name { width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .port-alloc-pct { font-family: 'Courier New', monospace; font-size: 0.7rem; color: var(--muted); width: 36px; text-align: right; }
-  .port-alloc-brl { font-family: 'Courier New', monospace; font-size: 0.7rem; color: var(--muted); width: 80px; text-align: right; }
-  .corr-table { width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace; font-size: 0.6rem; margin-top: 0.5rem; }
-  .corr-table th { color: var(--muted); padding: 3px 4px; text-align: center; font-weight: normal; }
-  .corr-table td { padding: 3px 4px; text-align: center; border-radius: 3px; }
-  .port-empty { font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--muted); padding: 2rem 0; text-align: center; }
+  .port-metric-val.na  { color: var(--muted); font-size: 0.78rem; font-weight: normal; }
+  .port-metric-val.neu { color: var(--text); font-size: 0.88rem; }
 
+  /* Alocação visual */
+  .port-alloc-panel {
+    padding: 1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .port-alloc-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 40px 90px;
+    align-items: center; gap: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+  .port-alloc-row:last-child { margin-bottom: 0; }
+  .port-alloc-name {
+    font-size: 0.76rem; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .port-alloc-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .port-alloc-bar { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .port-alloc-pct {
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+    color: var(--muted); text-align: right;
+  }
+  .port-alloc-brl {
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+    color: var(--muted); text-align: right;
+  }
+
+  /* Correlação */
+  .port-corr-panel { padding: 1rem 1.4rem; flex: 1; overflow: auto; }
+  .corr-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'Courier New', monospace; font-size: 0.62rem;
+  }
+  .corr-table th {
+    color: var(--muted); padding: 4px 6px;
+    text-align: center; font-weight: normal;
+    border-bottom: 1px solid var(--border);
+  }
+  .corr-table td { padding: 4px 6px; text-align: center; }
+  .port-empty {
+    font-family: 'Courier New', monospace; font-size: 0.7rem;
+    color: var(--muted); padding: 1.5rem 0; text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .port-layout { grid-template-columns: 1fr; }
+    .port-left { border-right: none; border-bottom: 1px solid var(--border); }
+    .port-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  }
   @media (max-width: 700px) {
     body { padding: 1.2rem 1rem 3rem; }
     h1   { font-size: 1.3rem; }
     .detail-inner { grid-template-columns: 1fr; }
-    .port-layout { grid-template-columns: 1fr; }
-    .fund-slider { width: 70px; }
   }
 </style>
 </head>
@@ -253,36 +405,39 @@
 <div id="tab-portfolio" class="tab-pane">
   <div class="port-layout">
 
-    <!-- Coluna esquerda: seleção -->
-    <div>
-      <div class="port-panel">
-        <div class="port-panel-title">Composição do portfólio</div>
-        <div class="port-patrimonio">
-          <label>Patrimônio (R$)</label>
-          <input type="text" id="portPatrimonio" value="1.000.000" oninput="onPatrimonioInput(this)" onblur="onPatrimonioBlur(this)">
+    <!-- Coluna esquerda: composição -->
+    <div class="port-left">
+      <div class="port-header">
+        <div class="port-section-label">Composição</div>
+        <div class="port-patrimonio-row">
+          <label>Patrimônio</label>
+          <input type="text" id="portPatrimonio" value="1.000.000"
+            oninput="onPatrimonioInput(this)" onblur="onPatrimonioBlur(this)">
         </div>
-        <div class="port-total-bar">
-          <div class="bar-track"><div class="bar-fill" id="portBarFill" style="width:0%"></div></div>
-          <span class="port-total-pct" id="portTotalPct">0% alocado</span>
-        </div>
-        <div class="fund-selector" id="fundSelector"></div>
       </div>
+      <div class="port-bar-row">
+        <div class="port-bar-track"><div class="port-bar-fill" id="portBarFill" style="width:0%"></div></div>
+        <span class="port-bar-label" id="portTotalPct">0% alocado</span>
+      </div>
+      <div class="fund-selector" id="fundSelector"></div>
     </div>
 
     <!-- Coluna direita: resultados -->
-    <div style="display:flex;flex-direction:column;gap:1.5rem;">
-
-      <div class="port-panel">
-        <div class="port-panel-title">Métricas</div>
+    <div class="port-right">
+      <div class="port-metrics-panel">
+        <div class="port-section-label" style="margin-bottom:0.8rem">Métricas do portfólio</div>
         <div id="portMetrics" class="port-empty">Selecione ao menos um fundo e defina os pesos</div>
       </div>
-
-      <div class="port-panel">
-        <div class="port-panel-title">Correlação</div>
+      <div class="port-alloc-panel" id="portAllocPanel" style="display:none">
+        <div class="port-section-label" style="margin-bottom:0.7rem">Alocação</div>
+        <div id="portAlloc"></div>
+      </div>
+      <div class="port-corr-panel">
+        <div class="port-section-label" style="margin-bottom:0.7rem">Correlação</div>
         <div id="portCorr" class="port-empty">Selecione ao menos 2 fundos</div>
       </div>
-
     </div>
+
   </div>
 </div><!-- /tab-portfolio -->
 
@@ -637,15 +792,16 @@ function switchTab(name) {
 }
 
 // ── Portfolio ──────────────────────────────────────────────────────────────────
-let historyData  = null;
-let fundsMap     = null;
+let historyData = null;
+let fundsMap    = null;
 const PORT_COLORS = ['#e05c2a','#1a7a52','#1a4a8a','#9c5c2a','#a05c00','#b83232','#7a5c9a','#2db87a','#4d8fd4','#d4882a','#e05050','#c9960c','#557a55','#8a6a3a'];
 
+// ── Patrimônio ──
 function parsePatrimonio() {
   const raw = document.getElementById('portPatrimonio').value.replace(/\./g,'').replace(',','.');
   return parseFloat(raw) || 0;
 }
-function onPatrimonioInput(el) { updatePortfolio(); }
+function onPatrimonioInput() { updatePortfolio(); }
 function onPatrimonioBlur(el) {
   const v = parsePatrimonio();
   if (v > 0) el.value = v.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
@@ -653,7 +809,7 @@ function onPatrimonioBlur(el) {
 }
 
 async function loadHistory() {
-  document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Carregando hist\u00f3rico\u2026</div>';
+  document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Carregando histórico\u2026</div>';
   try {
     const res = await fetch('history.json?v=' + Date.now());
     historyData = await res.json();
@@ -668,27 +824,89 @@ function buildFundSelector() {
   if (!historyData) return;
   const cnpjs = Object.keys(historyData.funds).sort((a,b) =>
     historyData.funds[a].nome.localeCompare(historyData.funds[b].nome));
+
   const html = cnpjs.map((cnpj, i) => {
     const nome = historyData.funds[cnpj].nome;
-    return `<div class="fund-row-port">
-      <label class="fund-check-label">
-        <input type="checkbox" id="chk-${i}" data-cnpj="${cnpj}" onchange="updatePortfolio()">
-        <span>${nome}</span>
-      </label>
-      <div style="display:flex;align-items:center;gap:0.5rem">
-        <input type="range" class="fund-slider" id="sl-${i}" data-cnpj="${cnpj}"
-          min="0" max="100" value="0" disabled oninput="updatePortfolio()">
-        <span class="fund-weight-pct" id="wp-${i}">0%</span>
-      </div>
+    return `<div class="fund-row-port inactive" id="frow-${i}">
+      <input type="checkbox" id="chk-${i}" data-cnpj="${cnpj}" onchange="onCheckChange(${i})">
+      <label class="fund-row-name" for="chk-${i}" title="${nome}">${nome}</label>
+      <input type="range" class="fund-slider" id="sl-${i}" data-cnpj="${cnpj}"
+        min="0" max="100" value="0" step="1" disabled
+        oninput="onSliderInput(${i})">
+      <input type="text" class="fund-weight-input" id="wi-${i}" data-cnpj="${cnpj}"
+        value="0%" disabled
+        onblur="onWeightBlur(${i})"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        onfocus="this.select()">
     </div>`;
   }).join('');
   document.getElementById('fundSelector').innerHTML = html;
 }
 
+// ── Eventos ──
+function onCheckChange(i) {
+  const chk  = document.getElementById('chk-' + i);
+  const sl   = document.getElementById('sl-'  + i);
+  const wi   = document.getElementById('wi-'  + i);
+  const row  = document.getElementById('frow-'+ i);
+  if (!chk.checked) {
+    sl.value   = 0;
+    wi.value   = '0%';
+    sl.disabled = true;
+    wi.disabled = true;
+    row.classList.add('inactive');
+  } else {
+    sl.disabled = false;
+    wi.disabled = false;
+    row.classList.remove('inactive');
+  }
+  updatePortfolio();
+}
+
+function onSliderInput(i) {
+  const sl  = document.getElementById('sl-' + i);
+  const wi  = document.getElementById('wi-' + i);
+  const val = parseInt(sl.value) || 0;
+  // Aplicar cap de 100%
+  const others = getTotalExcept(document.getElementById('chk-' + i).dataset.cnpj);
+  const capped = Math.min(val, 100 - others);
+  if (capped !== val) sl.value = capped;
+  wi.value = capped + '%';
+  updatePortfolio();
+}
+
+function onWeightBlur(i) {
+  const wi   = document.getElementById('wi-' + i);
+  const sl   = document.getElementById('sl-' + i);
+  const cnpj = document.getElementById('chk-' + i).dataset.cnpj;
+  // Aceita "55", "55%", "55.5"
+  let val = parseFloat(wi.value.replace('%','').replace(',','.')) || 0;
+  val = Math.max(0, Math.round(val));
+  // Cap: total sem este fundo + este <= 100
+  const others = getTotalExcept(cnpj);
+  val = Math.min(val, 100 - others);
+  sl.value = val;
+  wi.value = val + '%';
+  updatePortfolio();
+}
+
+function getTotalExcept(excludeCnpj) {
+  let total = 0;
+  document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
+    if (chk.checked && chk.dataset.cnpj !== excludeCnpj) {
+      total += parseInt(document.getElementById('sl-' + i).value) || 0;
+    }
+  });
+  return total;
+}
+
 function getWeights() {
   const weights = {};
   document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
-    if (chk.checked) weights[chk.dataset.cnpj] = parseInt(document.getElementById('sl-' + i).value) || 0;
+    if (chk.checked) {
+      const v = parseInt(document.getElementById('sl-' + i).value) || 0;
+      if (v > 0) weights[chk.dataset.cnpj] = v;
+    }
   });
   return weights;
 }
@@ -698,34 +916,27 @@ function subtractMonthsStr(dateStr, n) {
   let ny = y, nm = m - n;
   while (nm <= 0) { nm += 12; ny--; }
   while (nm > 12) { nm -= 12; ny++; }
-  // clamp day to last day of target month
   const lastDay = new Date(ny, nm, 0).getDate();
   const nd = Math.min(day, lastDay);
   return `${ny}-${String(nm).padStart(2,'0')}-${String(nd).padStart(2,'0')}`;
 }
 
 function updatePortfolio() {
-  document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
-    const sl = document.getElementById('sl-' + i);
-    const wp = document.getElementById('wp-' + i);
-    sl.disabled = !chk.checked;
-    if (!chk.checked) { sl.value = 0; wp.textContent = '0%'; }
-    else wp.textContent = sl.value + '%';
-  });
-
   const weights  = getWeights();
   const total    = Object.values(weights).reduce((a,b) => a+b, 0);
-  const selected = Object.keys(weights).filter(c => weights[c] > 0);
+  const selected = Object.keys(weights);
 
+  // Barra de progresso
   const fill  = document.getElementById('portBarFill');
-  const pctEl = document.getElementById('portTotalPct');
+  const label = document.getElementById('portTotalPct');
   fill.style.width = Math.min(total, 100) + '%';
   fill.classList.toggle('over', total > 100);
-  pctEl.textContent = total + '% alocado';
-  pctEl.style.color = total > 100 ? 'var(--red)' : total === 100 ? 'var(--green)' : 'var(--muted)';
+  label.textContent = total + '% alocado';
+  label.className = 'port-bar-label' + (total > 100 ? ' over' : total === 100 ? ' full' : '');
 
   if (selected.length === 0 || total === 0) {
     document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Selecione ao menos um fundo e defina os pesos</div>';
+    document.getElementById('portAllocPanel').style.display = 'none';
     document.getElementById('portCorr').innerHTML    = '<div class="port-empty">Selecione ao menos 2 fundos</div>';
     return;
   }
@@ -733,10 +944,9 @@ function updatePortfolio() {
   if (!fundsMap) fundsMap = Object.fromEntries(funds.map(f => [f.cnpjFmt, f]));
 
   const patrimonio = parsePatrimonio();
-  const wNorm = {};
-  for (const c of selected) wNorm[c] = weights[c] / total;
+  const wNorm      = Object.fromEntries(selected.map(c => [c, weights[c] / total]));
 
-  // Retornos diários ponderados (Float64Array para eficiência)
+  // Retornos ponderados
   const n = historyData.funds[selected[0]].returns.length;
   const portReturns = new Float64Array(n);
   for (const cnpj of selected) {
@@ -745,47 +955,33 @@ function updatePortfolio() {
     for (let i = 0; i < n; i++) portReturns[i] += rets[i] * w;
   }
 
-  // CAGR real da série acumulada — usa datas reais para o expoente
-  function cagrFromSlice(start, end) {
-    if (end <= start) return null;
+  // CAGR real da série
+  const dates = historyData.commonDates;
+  const anchor = historyData.to;
+
+  function cagrFromSlice(startIdx, endIdx) {
+    if (endIdx <= startIdx) return null;
     let cum = 1.0;
-    for (let i = start; i < end; i++) cum *= (1 + portReturns[i]);
-    const d0 = dates[start], d1 = dates[Math.min(end, dates.length - 1)];
+    for (let i = startIdx; i < endIdx; i++) cum *= (1 + portReturns[i]);
+    const d0 = dates[startIdx], d1 = dates[Math.min(endIdx, dates.length - 1)];
     const years = (new Date(d1) - new Date(d0)) / (365.25 * 86400000);
     return years > 0 ? (Math.pow(cum, 1 / years) - 1) * 100 : null;
   }
 
-  const dates   = historyData.commonDates;
-  const anchor  = historyData.to;
+  const d12   = subtractMonthsStr(anchor, 12);
+  const d36   = subtractMonthsStr(anchor, 36);
+  const idx12 = dates.reduce((best, d, i) => d <= d12 ? i : best, -1);
+  const idx36 = dates.reduce((best, d, i) => d <= d36 ? i : best, -1);
 
-  // Janela máxima = primeira data disponível no history para o portfólio selecionado
-  // (commonDates já é a interseção de todos, mas o fundo mais jovem pode ter menos dados
-  //  do que os 3 anos completos — usar a primeira data real da série)
-  const firstDate   = dates[0];
-  const monthsAvail = (new Date(anchor) - new Date(firstDate)) / (365.25 / 12 * 86400000);
+  const cagr12w = idx12 >= 0 ? cagrFromSlice(idx12, portReturns.length) : null;
+  const cagr36w = idx36 >= 0 ? cagrFromSlice(idx36, portReturns.length) : null;
 
-  const d12 = subtractMonthsStr(anchor, 12);
-  const d36 = subtractMonthsStr(anchor, 36);
-
-  // Só calcular se a série tem dados suficientes para a janela
-  const has12 = monthsAvail >= 11; // tolerância de ~1 mês
-  const has36 = monthsAvail >= 33;
-
-  const idx12 = has12 ? dates.reduce((best, d, i) => d <= d12 ? i : best, -1) : -1;
-  const idx36 = has36 ? dates.reduce((best, d, i) => d <= d36 ? i : best, -1) : -1;
-  const cagr12w = idx12 >= 0 && idx12 < portReturns.length ? cagrFromSlice(idx12, portReturns.length) : null;
-  const cagr36w = idx36 >= 0 && idx36 < portReturns.length ? cagrFromSlice(idx36, portReturns.length) : null;
-
-  // Label da janela disponível (para mostrar ao usuário quando limitado)
-  const maxMonths = Math.floor(monthsAvail);
-  const windowNote = !has36 ? `<div style="font-family:'Courier New',monospace;font-size:0.58rem;color:var(--amber);margin-top:0.5rem;grid-column:1/-1">⚠ dados disponíveis: ${maxMonths} meses (fundo mais jovem)</div>` : '';
-
-  // Volatilidade anualizada (std dos retornos diários * sqrt(252))
+  // Volatilidade anualizada
   const mean     = portReturns.reduce((a,b) => a+b, 0) / n;
   const variance = portReturns.reduce((a,r) => a + (r-mean)**2, 0) / (n-1);
   const vol      = Math.sqrt(variance * 252) * 100;
 
-  // Drawdown máximo e atual da série ponderada
+  // Drawdown máximo e atual
   let cum = 1, peak = 1, maxDD = 0;
   for (const r of portReturns) {
     cum *= (1 + r);
@@ -803,33 +999,37 @@ function updatePortfolio() {
   }
 
   const brlAlocado = patrimonio * total / 100;
-  const allocLines = selected.map((cnpj, i) => {
-    const nome  = historyData.funds[cnpj].nome;
-    const pct   = weights[cnpj];
-    const brl   = patrimonio * pct / 100;
-    const color = PORT_COLORS[i % PORT_COLORS.length];
-    return `<div class="port-alloc-row">
-      <span class="port-alloc-name">${nome}</span>
-      <div class="port-alloc-bar-wrap"><div class="port-alloc-bar" style="width:${pct}%;background:${color}"></div></div>
-      <span class="port-alloc-pct">${pct}%</span>
-      ${patrimonio > 0 ? `<span class="port-alloc-brl">R$\u00a0${brl.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span>` : ''}
-    </div>`;
-  }).join('');
 
+  // Métricas — grid 3 colunas, altura fixa
   document.getElementById('portMetrics').innerHTML = `
-    <div class="port-metrics">
-      <div><div class="port-metric-label">CAGR 12M</div>${fmtM(cagr12w)}</div>
-      <div><div class="port-metric-label">CAGR 36M</div>${fmtM(cagr36w)}</div>
-      <div><div class="port-metric-label">Volatilidade anual</div>${fmtM(vol)}</div>
-      <div><div class="port-metric-label">Drawdown máx</div>${fmtM(maxDD * 100, true)}</div>
-      <div><div class="port-metric-label">Drawdown atual</div>${fmtM(ddAtual * 100, true)}</div>
-      ${patrimonio > 0 ? `<div><div class="port-metric-label">Valor alocado</div><span class="port-metric-val" style="color:var(--text);font-size:0.9rem">R$\u00a0${brlAlocado.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span></div>` : '<div></div>'}
-      ${windowNote}
-    </div>
-    <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:0.9rem">
-      <div class="port-metric-label" style="margin-bottom:0.6rem">Aloca\u00e7\u00e3o</div>
-      <div class="port-alloc">${allocLines}</div>
+    <div class="port-metrics-grid">
+      <div class="port-metric"><div class="port-metric-label">CAGR 12M</div>${fmtM(cagr12w)}</div>
+      <div class="port-metric"><div class="port-metric-label">CAGR 36M</div>${fmtM(cagr36w)}</div>
+      <div class="port-metric"><div class="port-metric-label">Volatilidade</div>${fmtM(vol)}</div>
+      <div class="port-metric"><div class="port-metric-label">Drawdown m\u00e1x</div>${fmtM(maxDD * 100, true)}</div>
+      <div class="port-metric"><div class="port-metric-label">Drawdown atual</div>${fmtM(ddAtual * 100, true)}</div>
+      <div class="port-metric"><div class="port-metric-label">Valor alocado</div><span class="port-metric-val neu">${patrimonio > 0 ? 'R$\u00a0' + brlAlocado.toLocaleString('pt-BR',{maximumFractionDigits:0}) : '—'}</span></div>
     </div>`;
+
+  // Alocação
+  const allocPanel = document.getElementById('portAllocPanel');
+  if (selected.length > 0) {
+    allocPanel.style.display = 'block';
+    document.getElementById('portAlloc').innerHTML = selected.map((cnpj, i) => {
+      const nome  = historyData.funds[cnpj].nome;
+      const pct   = weights[cnpj];
+      const brl   = patrimonio * pct / 100;
+      const color = PORT_COLORS[i % PORT_COLORS.length];
+      return `<div class="port-alloc-row">
+        <span class="port-alloc-name" title="${nome}">${nome}</span>
+        <div class="port-alloc-bar-wrap"><div class="port-alloc-bar" style="width:${pct}%;background:${color}"></div></div>
+        <span class="port-alloc-pct">${pct}%</span>
+        <span class="port-alloc-brl">${patrimonio > 0 ? 'R$\u00a0' + brl.toLocaleString('pt-BR',{maximumFractionDigits:0}) : ''}</span>
+      </div>`;
+    }).join('');
+  } else {
+    allocPanel.style.display = 'none';
+  }
 
   // Correlação
   if (selected.length < 2) {
