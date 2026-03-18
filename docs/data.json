@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-18T02:10:23.279276+00:00",
+  "generatedAt": "2026-03-17T20:15:02.788767+00:00",
   "anchorDate": "2026-03-13",
   "ibov": {
     "cagr12": 41.43537278840421,
@@ -13,8 +13,6 @@
       "cnpjFmt": "22.232.927/0001-90",
       "latestDate": "2026-03-13",
       "latestQuota": 25.7092832,
-      "maxQuota": 30.3767845,
-      "maxQuotaDate": "2026-02-26",
       "inceptionDate": "2016-01-04",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -24,7 +22,9 @@
       "cagr36": 25.750152147209594,
       "cagr60": 20.46963455508728,
       "cagrInception": 27.982227247321955,
-      "error": false
+      "error": false,
+      "maxQuota": 30.3767845,
+      "maxQuotaDate": "2026-02-26"
     },
     {
       "name": "Organon FIF Cotas FIA",
@@ -32,8 +32,6 @@
       "cnpjFmt": "17.400.251/0001-66",
       "latestDate": "2026-03-13",
       "latestQuota": 21.3697526,
-      "maxQuota": 23.4157589,
-      "maxQuotaDate": "2026-02-24",
       "inceptionDate": "2014-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -43,7 +41,9 @@
       "cagr36": 23.48793681302981,
       "cagr60": 23.31934667584914,
       "cagrInception": 29.093905000874145,
-      "error": false
+      "error": false,
+      "maxQuota": 23.4157589,
+      "maxQuotaDate": "2026-02-24"
     },
     {
       "name": "Artica Long Term FIA",
@@ -51,8 +51,6 @@
       "cnpjFmt": "18.302.338/0001-63",
       "latestDate": "2026-03-13",
       "latestQuota": 19.45960268,
-      "maxQuota": 20.9451521,
-      "maxQuotaDate": "2026-02-24",
       "inceptionDate": "2020-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -62,7 +60,9 @@
       "cagr36": 28.059665970809466,
       "cagr60": 16.588559707161444,
       "cagrInception": 14.23300570605235,
-      "error": false
+      "error": false,
+      "maxQuota": 20.9451521,
+      "maxQuotaDate": "2026-02-24"
     },
     {
       "name": "Genoa Capital Arpa CIC Classe FIM RL",
@@ -70,8 +70,6 @@
       "cnpjFmt": "37.495.383/0001-26",
       "latestDate": "2026-03-13",
       "latestQuota": 2.20107946,
-      "maxQuota": 2.3753795,
-      "maxQuotaDate": "2026-02-20",
       "inceptionDate": "2021-04-30",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -81,7 +79,9 @@
       "cagr36": 23.805232545860488,
       "cagr60": null,
       "cagrInception": 17.594438104229027,
-      "error": false
+      "error": false,
+      "maxQuota": 2.3753795,
+      "maxQuotaDate": "2026-02-20"
     },
     {
       "name": "Itaú Artax Ultra Multimercado FIF DA CIC RL",
@@ -89,8 +89,6 @@
       "cnpjFmt": "42.698.666/0001-05",
       "latestDate": "2026-03-13",
       "latestQuota": 1.97435,
-      "maxQuota": 2.053515,
-      "maxQuotaDate": "2026-02-20",
       "inceptionDate": "2022-05-31",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -100,7 +98,9 @@
       "cagr36": 19.78948637792368,
       "cagr60": null,
       "cagrInception": 19.69552331448501,
-      "error": false
+      "error": false,
+      "maxQuota": 2.053515,
+      "maxQuotaDate": "2026-02-20"
     },
     {
       "name": "Guepardo Long Bias RV FIM",
@@ -108,8 +108,6 @@
       "cnpjFmt": "24.623.392/0001-03",
       "latestDate": "2026-03-13",
       "latestQuota": 8.03704791,
-      "maxQuota": 8.5831314,
-      "maxQuotaDate": "2026-02-24",
       "inceptionDate": "2017-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -119,7 +117,9 @@
       "cagr36": 25.439306253701123,
       "cagr60": 17.80540656903704,
       "cagrInception": 17.84375186303071,
-      "error": false
+      "error": false,
+      "maxQuota": 8.5831314,
+      "maxQuotaDate": "2026-02-24"
     },
     {
       "name": "Kapitalo Tarkus FIF Cotas FIA",
@@ -127,8 +127,6 @@
       "cnpjFmt": "28.747.685/0001-53",
       "latestDate": "2026-03-13",
       "latestQuota": 3.7528193,
-      "maxQuota": 4.2435095,
-      "maxQuotaDate": "2026-02-26",
       "inceptionDate": "2018-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -138,7 +136,9 @@
       "cagr36": 36.32695161631601,
       "cagr60": 13.763276798270429,
       "cagrInception": 16.92624113165808,
-      "error": false
+      "error": false,
+      "maxQuota": 4.2435095,
+      "maxQuotaDate": "2026-02-26"
     },
     {
       "name": "Real Investor FIC FIF Ações RL",
@@ -146,8 +146,6 @@
       "cnpjFmt": "10.500.884/0001-05",
       "latestDate": "2026-03-13",
       "latestQuota": 28.22421227,
-      "maxQuota": 31.0097067,
-      "maxQuotaDate": "2026-02-26",
       "inceptionDate": "2013-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -157,7 +155,9 @@
       "cagr36": 23.61999847877896,
       "cagr60": 14.461609765829575,
       "cagrInception": 15.00708891888558,
-      "error": false
+      "error": false,
+      "maxQuota": 31.0097067,
+      "maxQuotaDate": "2026-02-26"
     },
     {
       "name": "Gama Schroder Gaia Contour Tech Equity L&S BRL FIF CIC Mult IE RL",
@@ -165,8 +165,6 @@
       "cnpjFmt": "35.744.790/0001-02",
       "latestDate": "2026-03-13",
       "latestQuota": 2.7332279,
-      "maxQuota": 2.8658328,
-      "maxQuotaDate": "2026-02-24",
       "inceptionDate": "2021-01-04",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -176,7 +174,9 @@
       "cagr36": 30.27355649720942,
       "cagr60": 18.00117648575612,
       "cagrInception": 17.920970730138784,
-      "error": false
+      "error": false,
+      "maxQuota": 2.8658328,
+      "maxQuotaDate": "2026-02-24"
     },
     {
       "name": "Patria Long Biased FIF Cotas FIM",
@@ -184,8 +184,6 @@
       "cnpjFmt": "38.954.217/0001-03",
       "latestDate": "2026-03-13",
       "latestQuota": 2.7293606,
-      "maxQuota": 3.0035117,
-      "maxQuotaDate": "2026-02-20",
       "inceptionDate": "2021-01-04",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -195,7 +193,9 @@
       "cagr36": 28.307067830555923,
       "cagr60": 15.418712004300339,
       "cagrInception": 16.329081516473476,
-      "error": false
+      "error": false,
+      "maxQuota": 3.0035117,
+      "maxQuotaDate": "2026-02-20"
     },
     {
       "name": "Absolute Pace Long Biased FIC FIF Ações RL",
@@ -203,8 +203,6 @@
       "cnpjFmt": "32.073.525/0001-43",
       "latestDate": "2026-03-13",
       "latestQuota": 3.93585257,
-      "maxQuota": 4.221496,
-      "maxQuotaDate": "2026-02-20",
       "inceptionDate": "2019-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -214,7 +212,9 @@
       "cagr36": 20.20086347757597,
       "cagr60": 16.553799553750224,
       "cagrInception": 20.298196405287495,
-      "error": false
+      "error": false,
+      "maxQuota": 4.221496,
+      "maxQuotaDate": "2026-02-20"
     },
     {
       "name": "Arbor FIC FIA",
@@ -222,8 +222,6 @@
       "cnpjFmt": "21.689.246/0001-92",
       "latestDate": "2026-03-13",
       "latestQuota": 7.4858928,
-      "maxQuota": 8.297723,
-      "maxQuotaDate": "2026-01-12",
       "inceptionDate": "2016-01-04",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -233,7 +231,9 @@
       "cagr36": 31.064946183459142,
       "cagr60": 8.999294079997643,
       "cagrInception": 21.854902178722458,
-      "error": false
+      "error": false,
+      "maxQuota": 8.297723,
+      "maxQuotaDate": "2026-01-12"
     },
     {
       "name": "Charles River FIF Ações",
@@ -241,8 +241,6 @@
       "cnpjFmt": "14.438.229/0001-17",
       "latestDate": "2026-03-12",
       "latestQuota": 12.518175222581,
-      "maxQuota": 13.4070715,
-      "maxQuotaDate": "2026-01-28",
       "inceptionDate": "2015-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -252,7 +250,9 @@
       "cagr36": 10.877189322724456,
       "cagr60": 14.441209859415682,
       "cagrInception": 21.040848129410826,
-      "error": false
+      "error": false,
+      "maxQuota": 13.4070715,
+      "maxQuotaDate": "2026-01-28"
     },
     {
       "name": "SPX Falcon FIF CIC Ações RL",
@@ -260,8 +260,6 @@
       "cnpjFmt": "17.397.315/0001-17",
       "latestDate": "2026-03-13",
       "latestQuota": 6.8979927,
-      "maxQuota": 7.304538,
-      "maxQuotaDate": "2026-02-20",
       "inceptionDate": "2014-01-02",
       "anchorDate": "2026-03-13",
       "anchor12m": "2025-03-13",
@@ -271,7 +269,14 @@
       "cagr36": 27.05223895042568,
       "cagr60": 19.480908454514534,
       "cagrInception": 16.49402287626094,
-      "error": false
+      "error": false,
+      "maxQuota": 7.304538,
+      "maxQuotaDate": "2026-02-20"
     }
-  ]
+  ],
+  "cdi": {
+    "cagr12": 0.04907059522563095,
+    "cagr36": null,
+    "cagr60": null
+  }
 }
