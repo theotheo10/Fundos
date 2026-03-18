@@ -388,6 +388,82 @@
     color: var(--muted); padding: 1.5rem 0; text-align: center;
   }
 
+
+  /* ── Simulador de IR ── */
+  .ir-section {
+    margin-top: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .ir-header {
+    padding: 1rem 1.4rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 1.2rem; flex-wrap: wrap;
+  }
+  .ir-header-title {
+    font-size: 0.72rem; font-family: 'Courier New', monospace;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+  }
+  .ir-slider-wrap {
+    display: flex; align-items: center; gap: 0.7rem; flex: 1; min-width: 220px;
+  }
+  .ir-slider-label {
+    font-family: 'Courier New', monospace; font-size: 0.68rem; color: var(--muted);
+    white-space: nowrap;
+  }
+  .ir-slider {
+    flex: 1; accent-color: var(--accent);
+    height: 3px; cursor: pointer;
+  }
+  .ir-slider-val {
+    font-family: 'Courier New', monospace; font-size: 0.8rem;
+    font-weight: bold; color: var(--text); min-width: 40px; text-align: right;
+  }
+  .ir-empty {
+    font-family: 'Courier New', monospace; font-size: 0.7rem;
+    color: var(--muted); padding: 1.5rem; text-align: center;
+  }
+  .ir-table-wrap { overflow-x: auto; }
+  .ir-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.8rem; min-width: 680px;
+  }
+  .ir-table thead th {
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+    padding: 0.6rem 1rem; text-align: right; border-bottom: 1px solid var(--border);
+    background: var(--bg); white-space: nowrap;
+  }
+  .ir-table thead th:first-child { text-align: left; }
+  .ir-table tbody td {
+    padding: 0.65rem 1rem; text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Courier New', monospace; font-size: 0.78rem;
+  }
+  .ir-table tbody td:first-child {
+    text-align: left; font-family: inherit; font-size: 0.8rem;
+  }
+  .ir-table tbody tr:last-child td { border-bottom: none; }
+  .ir-table tbody tr.ir-total-row td {
+    border-top: 2px solid var(--border);
+    font-weight: bold; background: var(--bg);
+  }
+  .ir-val-pos  { color: var(--green); }
+  .ir-val-neg  { color: var(--red); }
+  .ir-val-muted { color: var(--muted); font-size: 0.7rem; }
+  .ir-trib-badge {
+    display: inline-block; font-family: 'Courier New', monospace;
+    font-size: 0.58rem; padding: 1px 5px; border-radius: 4px;
+    margin-left: 4px; vertical-align: middle;
+  }
+  .ir-trib-rv { border: 0.5px solid var(--green); color: var(--green); background: var(--green-light); }
+  .ir-trib-tr { border: 0.5px solid var(--amber); color: var(--amber); background: var(--amber-light); }
+  .ir-note {
+    font-family: 'Courier New', monospace; font-size: 0.6rem;
+    color: var(--muted); padding: 0.6rem 1rem 0.8rem; line-height: 1.6;
+  }
   @media (max-width: 900px) {
     .port-layout { grid-template-columns: 1fr; }
     .port-left { border-right: none; border-bottom: 1px solid var(--border); }
@@ -477,6 +553,21 @@
     </div>
 
   </div>
+
+  <!-- ── Simulador de IR ── -->
+  <div class="ir-section" id="irSection">
+    <div class="ir-header">
+      <span class="ir-header-title">Simulação de IR no resgate</span>
+      <div class="ir-slider-wrap">
+        <span class="ir-slider-label">Prazo até o resgate:</span>
+        <input type="range" class="ir-slider" id="irSlider" min="1" max="20" value="5" step="1"
+               oninput="onIrSlider()">
+        <span class="ir-slider-val" id="irSliderVal">5 anos</span>
+      </div>
+    </div>
+    <div id="irBody" class="ir-empty">Selecione fundos e pesos no portfólio acima</div>
+  </div>
+
 </div><!-- /tab-portfolio -->
 
 <div class="legend">
@@ -1228,6 +1319,297 @@ function updatePortfolio() {
     }).join('') + '</tr>'
   ).join('');
   document.getElementById('portCorr').innerHTML = `<div class="corr-table-wrap"><table class="corr-table">${th}${rows}</table></div>`;
+
+  // Atualiza simulador de IR sempre que o portfólio mudar
+  renderIR();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SIMULADOR DE IR
+// ════════════════════════════════════════════════════════════════════════════
+
+// Tabela regressiva: alíquota marginal por prazo (dias desde o aporte)
+function trAliquota(diasAporte) {
+  if (diasAporte <= 180) return 0.225;
+  if (diasAporte <= 360) return 0.20;
+  if (diasAporte <= 720) return 0.175;
+  return 0.15;
+}
+
+// Formata BRL
+function fmtBRL(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+function fmtBRLDec(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtPctIr(v) {
+  return v.toFixed(1) + '%';
+}
+
+// ── Simulação por fundo ───────────────────────────────────────────────────────
+//
+// RV (Renda Variável):
+//   - Sem come-cotas
+//   - IR no resgate: 15% sobre rendimento bruto total
+//
+// TR (Tabela Regressiva):
+//   - Come-cotas em mai e nov de cada ano (15% sobre rendimento desde último CC)
+//     O rendimento tributado vira nova base de custo para o próximo período
+//   - No resgate: alíquota complementar sobre o trecho desde o último CC
+//     * Prazo total do aporte > 720 dias → alíquota = 15% (complemento = 0%
+//       mas o trecho aberto desde o último CC *ainda não foi tributado*, então
+//       incide 15% sobre ele)
+//     * Prazo total ≤ 720 dias → alíquota da tabela regressiva sobre o trecho
+//   - Obs: "complemento" aqui significa o imposto sobre o último trecho aberto.
+//     Para prazo > 720d, esse trecho paga 15% diretamente (não é complemento de
+//     nada — é o imposto sobre um pedaço ainda não tributado).
+//
+// Simplificação aprovada: prazo para alíquota contado a partir do aporte inicial.
+
+function simularFundo(aporte, retornoAnual, trib, anosResgate) {
+  const r = retornoAnual / 100;  // taxa anual (retorno alvo)
+
+  if (trib === 'RV') {
+    // ── Renda Variável ──────────────────────────────────────────────────────
+    const valorBruto  = aporte * Math.pow(1 + r, anosResgate);
+    const rendimento  = valorBruto - aporte;
+    const ir          = rendimento * 0.15;
+    const valorLiq    = valorBruto - ir;
+    const aliqEfetiva = rendimento > 0 ? (ir / rendimento) * 100 : 0;
+    return {
+      aporte, valorBruto, rendimentoBruto: rendimento,
+      irComeCotas: 0, irResgate: ir, irTotal: ir,
+      valorLiquido: valorLiq, aliqEfetiva,
+      detalhes: []
+    };
+  }
+
+  // ── Tabela Regressiva ─────────────────────────────────────────────────────
+  // Simula dia a dia com come-cotas em 31/mai e 30/nov
+  // Por eficiência: simula período a período (entre come-cotas)
+  //
+  // Estado: base = valor sobre o qual incide crescimento (após antecipações IR)
+  //         irComeCotas = IR total antecipado via come-cotas
+  //         patrimonioReal = valor real da carteira (cresce normalmente)
+  //
+  // A cada come-cotas:
+  //   rendimento_periodo = patrimonioReal_atual - base_atual
+  //   ir_cc = rendimento_periodo * 0.15
+  //   A receita federal "cobra" esse IR: o patrimônio líquido cai
+  //   patrimonioReal -= ir_cc
+  //   base = patrimonioReal (nova base para o próximo período)
+  //
+  // No resgate (entre dois come-cotas):
+  //   rendimento_trecho = patrimonioReal_final - base_apos_ultimo_cc
+  //   aliq_trecho = trAliquota(dias_totais_do_aporte)  [simplificação aprovada]
+  //   ir_resgate = rendimento_trecho * aliq_trecho
+  //   valorLiquido = patrimonioReal_final - ir_resgate
+
+  const hoje = new Date();
+  // Próximos come-cotas: 31/mai e 30/nov de cada ano, a partir de hoje
+  function proximosComeCotas(anosTotal) {
+    const datas = [];
+    const fimMs = hoje.getTime() + anosTotal * 365.25 * 86400000;
+    const ano0  = hoje.getFullYear();
+    for (let a = ano0; a <= ano0 + anosTotal + 1; a++) {
+      [new Date(a, 4, 31), new Date(a, 10, 30)].forEach(d => {
+        if (d > hoje && d.getTime() < fimMs) datas.push(d);
+      });
+    }
+    return datas.sort((a, b) => a - b);
+  }
+
+  const ccDatas    = proximosComeCotas(anosResgate);
+  const dataResgate = new Date(hoje.getTime() + anosResgate * 365.25 * 86400000);
+  const diasAporte  = anosResgate * 365.25;  // simplificação aprovada
+
+  let patrimonioReal = aporte;
+  let base           = aporte;  // base de custo atual (após última antecipação)
+  let irComeCotas    = 0;
+  const detalhes     = [];
+
+  // Crescimento de um período (taxa diária composta)
+  function crescer(valorInicial, dias) {
+    return valorInicial * Math.pow(1 + r, dias / 365.25);
+  }
+
+  let dataAtual = new Date(hoje);
+
+  for (const dataCC of ccDatas) {
+    const dias = (dataCC - dataAtual) / 86400000;
+    patrimonioReal = crescer(patrimonioReal, dias);
+    const rendPeriodo = patrimonioReal - base;
+    if (rendPeriodo > 0) {
+      const irCC = rendPeriodo * 0.15;
+      irComeCotas    += irCC;
+      patrimonioReal -= irCC;
+      detalhes.push({
+        tipo: 'come-cotas',
+        data: dataCC.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+        rendimento: rendPeriodo,
+        ir: irCC,
+        aliq: 15,
+      });
+    }
+    base      = patrimonioReal;
+    dataAtual = new Date(dataCC);
+  }
+
+  // Crescimento do último trecho (do último CC até o resgate)
+  const diasUltimoTrecho = (dataResgate - dataAtual) / 86400000;
+  patrimonioReal = crescer(patrimonioReal, diasUltimoTrecho);
+  const rendTrecho = patrimonioReal - base;
+
+  // Alíquota do trecho final: baseada no prazo total do aporte (simplificação)
+  const aliqTrecho  = trAliquota(diasAporte);
+  const irResgate   = Math.max(0, rendTrecho * aliqTrecho);
+
+  if (rendTrecho > 0) {
+    detalhes.push({
+      tipo: 'resgate',
+      data: dataResgate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+      rendimento: rendTrecho,
+      ir: irResgate,
+      aliq: aliqTrecho * 100,
+    });
+  }
+
+  const valorBruto      = patrimonioReal;
+  const irTotal         = irComeCotas + irResgate;
+  const valorLiquido    = valorBruto - irResgate;  // come-cotas já saiu do patrimônio
+  const rendimentoBruto = aporte * Math.pow(1 + r, anosResgate) - aporte;
+  const aliqEfetiva     = rendimentoBruto > 0 ? (irTotal / rendimentoBruto) * 100 : 0;
+
+  return {
+    aporte, valorBruto, rendimentoBruto,
+    irComeCotas, irResgate, irTotal,
+    valorLiquido, aliqEfetiva, detalhes
+  };
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function onIrSlider() {
+  const anos = parseInt(document.getElementById('irSlider').value);
+  document.getElementById('irSliderVal').textContent = anos + (anos === 1 ? ' ano' : ' anos');
+  renderIR();
+}
+
+function renderIR() {
+  const el   = document.getElementById('irBody');
+  const anos = parseInt(document.getElementById('irSlider')?.value || 5);
+
+  const weights  = getWeights();
+  const selected = Object.keys(weights);
+  if (selected.length === 0 || !historyData) {
+    el.className = 'ir-empty';
+    el.innerHTML = 'Selecione fundos e pesos no portfólio acima';
+    return;
+  }
+
+  const total      = Object.values(weights).reduce((a, b) => a + b, 0);
+  const patrimonio = parsePatrimonio();
+
+  // Calcula simulação por fundo
+  const rows    = [];
+  let totAporte  = 0, totBruto = 0, totCC = 0, totResgate = 0, totTotal = 0, totLiq = 0, totRend = 0;
+
+  for (const cnpj of selected) {
+    const w      = weights[cnpj] / total;
+    const aporte = patrimonio * w;
+    const meta   = FUND_META[cnpj] || {};
+    const trib   = meta.trib || 'RV';
+    const nome   = (historyData.funds[cnpj]?.nome) || meta.nome || cnpj;
+
+    // Retorno alvo do fundo
+    const fData  = funds.find(f => f.cnpjFmt === cnpj);
+    const target = fData ? calcTargetReturn(fData) : null;
+    const retorno = target ? target.value : null;
+
+    if (retorno === null) {
+      rows.push({ cnpj, nome, trib, aporte, sem_dados: true });
+      continue;
+    }
+
+    const sim = simularFundo(aporte, retorno, trib, anos);
+    rows.push({ cnpj, nome, trib, retorno, ...sim });
+
+    totAporte  += sim.aporte;
+    totBruto   += sim.valorBruto;
+    totRend    += sim.rendimentoBruto;
+    totCC      += sim.irComeCotas;
+    totResgate += sim.irResgate;
+    totTotal   += sim.irTotal;
+    totLiq     += sim.valorLiquido;
+  }
+
+  const totAliqEf = totRend > 0 ? (totTotal / totRend) * 100 : 0;
+
+  // ── Build HTML ──
+  let html = `<div class="ir-table-wrap"><table class="ir-table">
+    <thead><tr>
+      <th>Fundo</th>
+      <th>Ret. alvo</th>
+      <th>Aporte</th>
+      <th>Valor bruto</th>
+      <th>Come-cotas</th>
+      <th>IR resgate</th>
+      <th>IR total</th>
+      <th>Alíq. efetiva</th>
+      <th>Valor líquido</th>
+    </tr></thead><tbody>`;
+
+  for (const row of rows) {
+    const tribBadge = row.trib === 'RV'
+      ? '<span class="ir-trib-badge ir-trib-rv">RV</span>'
+      : '<span class="ir-trib-badge ir-trib-tr">TR</span>';
+
+    if (row.sem_dados) {
+      html += `<tr>
+        <td>${row.nome}${tribBadge}</td>
+        <td colspan="8" class="ir-val-muted" style="text-align:center">retorno alvo indisponível</td>
+      </tr>`;
+      continue;
+    }
+
+    const rendPct  = row.aporte > 0 ? ((row.valorBruto / row.aporte - 1) * 100) : 0;
+    html += `<tr>
+      <td>${row.nome}${tribBadge}</td>
+      <td class="ir-val-pos">+${row.retorno.toFixed(1)}%</td>
+      <td>${fmtBRL(row.aporte)}</td>
+      <td>${fmtBRL(row.valorBruto)} <span class="ir-val-muted">(+${rendPct.toFixed(0)}%)</span></td>
+      <td class="ir-val-neg">${row.irComeCotas > 0 ? fmtBRL(row.irComeCotas) : '<span class="ir-val-muted">—</span>'}</td>
+      <td class="ir-val-neg">${row.irResgate   > 0 ? fmtBRL(row.irResgate)   : '<span class="ir-val-muted">—</span>'}</td>
+      <td class="ir-val-neg">${fmtBRL(row.irTotal)}</td>
+      <td class="ir-val-neg">${fmtPctIr(row.aliqEfetiva)}</td>
+      <td class="ir-val-pos">${fmtBRL(row.valorLiquido)}</td>
+    </tr>`;
+  }
+
+  // Linha de total
+  const totRendPct = totAporte > 0 ? ((totBruto / totAporte - 1) * 100) : 0;
+  html += `<tr class="ir-total-row">
+    <td>Total portfólio</td>
+    <td>—</td>
+    <td>${fmtBRL(totAporte)}</td>
+    <td>${fmtBRL(totBruto)} <span class="ir-val-muted">(+${totRendPct.toFixed(0)}%)</span></td>
+    <td class="ir-val-neg">${totCC      > 0 ? fmtBRL(totCC)      : '<span class="ir-val-muted">—</span>'}</td>
+    <td class="ir-val-neg">${totResgate > 0 ? fmtBRL(totResgate) : '<span class="ir-val-muted">—</span>'}</td>
+    <td class="ir-val-neg">${fmtBRL(totTotal)}</td>
+    <td class="ir-val-neg">${fmtPctIr(totAliqEf)}</td>
+    <td class="ir-val-pos">${fmtBRL(totLiq)}</td>
+  </tr>`;
+
+  html += `</tbody></table></div>
+  <div class="ir-note">
+    RV: 15% sobre rendimento no resgate, sem come-cotas. &nbsp;·&nbsp;
+    TR: come-cotas de 15% em mai/nov sobre rendimento do período; alíquota do último trecho por prazo total do aporte
+    (≤180d&nbsp;22,5% · 181–360d&nbsp;20% · 361–720d&nbsp;17,5% · &gt;720d&nbsp;15%). &nbsp;·&nbsp;
+    Projeção usa retorno alvo de cada fundo (média pond. por período).
+  </div>`;
+
+  el.className = '';
+  el.innerHTML = html;
 }
 
 updateHeaders();
