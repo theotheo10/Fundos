@@ -340,9 +340,11 @@
 
   /* Correlação */
   .port-corr-panel { padding: 1rem 1.4rem; flex: 1; overflow: auto; }
+  .corr-table-wrap { overflow-x: auto; }
   .corr-table {
     width: 100%; border-collapse: collapse;
     font-family: 'Courier New', monospace; font-size: 0.62rem;
+    min-width: 300px;
   }
   .corr-table th {
     color: var(--muted); padding: 4px 6px;
@@ -1050,7 +1052,7 @@ function updatePortfolio() {
       return `<td style="background:${bg};color:${col}">${v.toFixed(2)}</td>`;
     }).join('') + '</tr>'
   ).join('');
-  document.getElementById('portCorr').innerHTML = `<table class="corr-table">${th}${rows}</table>`;
+  document.getElementById('portCorr').innerHTML = `<div class="corr-table-wrap"><table class="corr-table">${th}${rows}</table></div>`;
 }
 
 updateHeaders();
