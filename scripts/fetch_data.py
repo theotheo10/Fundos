@@ -369,6 +369,165 @@ def fetch_ibov(anchor: datetime.date, a12: datetime.date, a36: datetime.date, a6
         return {"cagr12": None, "cagr36": None, "cagr60": None}
 
 
+def update_history(anchor):
+    """
+    Atualiza o history.json com as cotas do mês atual.
+    Lê o history.json existente, busca só o mês corrente na CVM,
+    adiciona novas datas e recalcula correlações e drawdowns.
+    """
+    print(f"\n── Atualizando history.json")
+    hist_path = Path(__file__).parent.parent / "docs" / "history.json"
+
+    # Carregar histórico existente ou iniciar vazio
+    if hist_path.exists():
+        try:
+            existing = json.loads(hist_path.read_text())
+            # quotas[cnpjFmt][date] = quota
+            quotas = {cnpj: dict(zip(fd["dates"], fd["quotas"]))
+                      for cnpj, fd in existing.get("funds", {}).items()}
+            print(f"  Histórico existente: {len(next(iter(quotas.values()), {}))} datas")
+        except Exception as e:
+            print(f"  Erro ao ler history.json: {e} — iniciando do zero")
+            quotas = {f["cnpjFmt"]: {} for f in FUNDS}
+    else:
+        print("  history.json não encontrado — iniciando do zero")
+        quotas = {f["cnpjFmt"]: {} for f in FUNDS}
+
+    # Buscar mês atual (e anterior como fallback)
+    months_to_fetch = set()
+    months_to_fetch.add((anchor.year, anchor.month))
+    # também mês anterior para garantir continuidade
+    prev = anchor.replace(day=1) - datetime.timedelta(days=1)
+    months_to_fetch.add((prev.year, prev.month))
+
+    cnpj_map = {f["cnpj"]: f["cnpjFmt"] for f in FUNDS}
+    cnpj_set = set(cnpj_map.keys())
+
+    for year, month in sorted(months_to_fetch):
+        data = fetch_monthly(year, month)
+        if not data:
+            continue
+        added = 0
+        for line in data["lines"][1:]:
+            if not any(c in line for c in cnpj_set):
+                continue
+            cols = line.split(";")
+            try:
+                raw_cnpj = cols[data["col_date"] - 1].strip() if data["col_date"] > 0 else ""
+                # encontrar CNPJ na linha
+                found_cnpj = next((c for c in cnpj_set if c in line), None)
+                if not found_cnpj:
+                    continue
+                cnpj_fmt = cnpj_map[found_cnpj]
+                d = cols[data["col_date"]].strip()
+                q = float(cols[data["col_quota"]].replace(",", "."))
+                if d and d not in quotas.get(cnpj_fmt, {}):
+                    quotas.setdefault(cnpj_fmt, {})[d] = q
+                    added += 1
+            except (ValueError, IndexError):
+                continue
+        print(f"  {year}-{month:02d}: {added} novas cotas adicionadas")
+
+    # Janela de 3 anos a partir do anchor
+    cutoff = subtract_months(anchor, 36).isoformat()
+
+    # Datas comuns a todos os fundos dentro da janela
+    all_date_sets = [set(d for d in quotas.get(f["cnpjFmt"], {}) if d >= cutoff)
+                     for f in FUNDS]
+    common_dates = sorted(set.intersection(*all_date_sets)) if all_date_sets else []
+
+    if not common_dates:
+        print("  Sem datas comuns — history.json não atualizado")
+        return
+
+    print(f"  Datas comuns: {len(common_dates)} ({common_dates[0]} → {common_dates[-1]})")
+
+    # Retornos diários por fundo
+    FUND_NOMES = {
+        "22.232.927/0001-90": "Tarpon GT",
+        "17.400.251/0001-66": "Organon",
+        "18.302.338/0001-63": "Ártica Long Term",
+        "37.495.383/0001-26": "Genoa Arpa",
+        "42.698.666/0001-05": "Artax Ultra",
+        "24.623.392/0001-03": "Guepardo Long Bias",
+        "28.747.685/0001-53": "Kapitalo Tarkus",
+        "10.500.884/0001-05": "Real Investor",
+        "35.744.790/0001-02": "Schroder Tech L&S",
+        "38.954.217/0001-03": "Pátria Long Biased",
+        "32.073.525/0001-43": "Absolute Pace",
+        "21.689.246/0001-92": "Arbor",
+        "14.438.229/0001-17": "Charles River",
+        "17.397.315/0001-17": "SPX Falcon",
+    }
+
+    returns_by_fund = {}
+    for cnpj_fmt, nome in FUND_NOMES.items():
+        qs = quotas.get(cnpj_fmt, {})
+        rets = []
+        for i in range(1, len(common_dates)):
+            q0 = qs.get(common_dates[i-1])
+            q1 = qs.get(common_dates[i])
+            if q0 and q1:
+                rets.append((q1 / q0) - 1)
+            else:
+                rets.append(0.0)
+        returns_by_fund[cnpj_fmt] = rets
+
+    # Correlação de Pearson
+    def pearson(a, b):
+        n = len(a)
+        if n < 2:
+            return 0.0
+        ma, mb = sum(a)/n, sum(b)/n
+        cov = sum((a[i]-ma)*(b[i]-mb) for i in range(n))
+        sa  = math.sqrt(sum((x-ma)**2 for x in a))
+        sb  = math.sqrt(sum((x-mb)**2 for x in b))
+        return round(cov / (sa * sb), 4) if sa * sb > 0 else 0.0
+
+    corr = {}
+    cnpjs = list(FUND_NOMES.keys())
+    for ca in cnpjs:
+        corr[ca] = {cb: pearson(returns_by_fund[ca], returns_by_fund[cb]) for cb in cnpjs}
+
+    # Drawdown máximo por fundo
+    max_drawdowns = {}
+    for cnpj_fmt, rets in returns_by_fund.items():
+        cum, peak, max_dd = 1.0, 1.0, 0.0
+        for r in rets:
+            cum *= (1 + r)
+            if cum > peak:
+                peak = cum
+            dd = (cum - peak) / peak
+            if dd < max_dd:
+                max_dd = dd
+        max_drawdowns[cnpj_fmt] = round(max_dd * 100, 2)
+
+    # Montar output
+    funds_out = {}
+    for cnpj_fmt, nome in FUND_NOMES.items():
+        qs = quotas.get(cnpj_fmt, {})
+        funds_out[cnpj_fmt] = {
+            "nome":        nome,
+            "dates":       common_dates,
+            "quotas":      [qs.get(d, 0) for d in common_dates],
+            "returns":     returns_by_fund[cnpj_fmt],
+            "maxDrawdown": max_drawdowns[cnpj_fmt],
+        }
+
+    output = {
+        "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "from":        common_dates[0],
+        "to":          common_dates[-1],
+        "commonDates": common_dates,
+        "correlation": corr,
+        "funds":       funds_out,
+    }
+
+    hist_path.write_text(json.dumps(output, ensure_ascii=False, separators=(',', ':')))
+    size_kb = hist_path.stat().st_size / 1024
+    print(f"  ✓ history.json atualizado ({size_kb:.0f} KB, {len(common_dates)} datas)")
+
+
 def main():
     today = datetime.date.today()
     print(f"Running for {today.isoformat()}")
@@ -409,6 +568,9 @@ def main():
     out_path.parent.mkdir(exist_ok=True)
     out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2))
     print(f"\n✓ Wrote {out_path} ({len(results)} funds)")
+
+    # ── Atualizar history.json ──
+    update_history(anchor)
 
 
 if __name__ == "__main__":
