@@ -101,7 +101,7 @@
 
   /* ── Detail panel ── */
   .detail-panel { overflow: hidden; max-height: 0; transition: max-height 0.35s ease; }
-  .detail-panel.open { max-height: 400px; }
+  .detail-panel.open { max-height: 600px; }
 
   .detail-inner {
     display: grid;
@@ -151,7 +151,7 @@
   .legend-key { color: var(--text); font-weight: bold; }
   .legend-status { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
   .legend-status #statusDate { color: var(--muted); }
-  .legend-status #statusDate::before { content: '·'; margin-right: 0.5rem; }
+  .legend-status #statusDate:not(:empty)::before { content: '·'; margin-right: 0.5rem; }
   .legend-src { font-size: 0.62rem; opacity: 0.6; }
 
   /* ── Tabs ── */
@@ -180,15 +180,14 @@
   .fund-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); cursor: pointer; }
   .fund-slider:disabled { opacity: 0.3; cursor: not-allowed; }
   .fund-weight-pct { font-family: 'Courier New', monospace; font-size: 0.72rem; color: var(--text); width: 36px; text-align: right; }
-  .port-patrimonio { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; }
+  .port-patrimonio { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.8rem; }
   .port-patrimonio label { font-family: 'Courier New', monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
-  .port-patrimonio input[type=number] { font-family: 'Courier New', monospace; font-size: 0.82rem; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); width: 160px; outline: none; }
-  .port-patrimonio input[type=number]:focus { border-color: var(--accent); }
-  .port-total-bar { font-family: 'Courier New', monospace; font-size: 0.7rem; color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.7rem; }
-  .port-total-bar .bar-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .port-patrimonio input[type=text] { font-family: 'Courier New', monospace; font-size: 0.82rem; padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); width: 150px; outline: none; }
+  .port-patrimonio input[type=text]:focus { border-color: var(--accent); }
+  .port-total-bar { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; font-family: 'Courier New', monospace; font-size: 0.68rem; color: var(--muted); }
+  .port-total-bar .bar-track { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
   .port-total-bar .bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.2s, background 0.2s; }
   .port-total-bar .bar-fill.over { background: var(--red); }
-  .port-total-pct { min-width: 38px; text-align: right; }
   .port-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem 1.2rem; margin-bottom: 1.2rem; }
   .port-metric-label { font-family: 'Courier New', monospace; font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 2px; }
   .port-metric-val { font-family: 'Courier New', monospace; font-size: 1.1rem; font-weight: bold; }
@@ -226,8 +225,6 @@
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☽ escuro</button>
 </div>
 
-
-
 <div class="tabs">
   <button class="tab-btn active" id="tab-btn-ranking" onclick="switchTab('ranking')">Ranking</button>
   <button class="tab-btn" id="tab-btn-portfolio" onclick="switchTab('portfolio')">Portfólio</button>
@@ -259,15 +256,14 @@
     <!-- Coluna esquerda: seleção -->
     <div>
       <div class="port-panel">
-        <div class="port-panel-title">Composição</div>
+        <div class="port-panel-title">Composição do portfólio</div>
         <div class="port-patrimonio">
           <label>Patrimônio (R$)</label>
-          <input type="number" id="portPatrimonio" value="1000000" min="0" step="100000" oninput="updatePortfolio()">
+          <input type="text" id="portPatrimonio" value="1.000.000" oninput="onPatrimonioInput(this)" onblur="onPatrimonioBlur(this)">
         </div>
         <div class="port-total-bar">
-          <span>Alocado:</span>
           <div class="bar-track"><div class="bar-fill" id="portBarFill" style="width:0%"></div></div>
-          <span class="port-total-pct" id="portTotalPct">0%</span>
+          <span class="port-total-pct" id="portTotalPct">0% alocado</span>
         </div>
         <div class="fund-selector" id="fundSelector"></div>
       </div>
@@ -277,18 +273,13 @@
     <div style="display:flex;flex-direction:column;gap:1.5rem;">
 
       <div class="port-panel">
-        <div class="port-panel-title">Métricas do Portfólio</div>
-        <div id="portMetrics" class="port-empty">Selecione ao menos um fundo</div>
+        <div class="port-panel-title">Métricas</div>
+        <div id="portMetrics" class="port-empty">Selecione ao menos um fundo e defina os pesos</div>
       </div>
 
       <div class="port-panel">
-        <div class="port-panel-title">Alocação</div>
-        <div id="portAlloc" class="port-empty">—</div>
-      </div>
-
-      <div class="port-panel">
-        <div class="port-panel-title">Correlação entre fundos selecionados</div>
-        <div id="portCorr" class="port-empty">—</div>
+        <div class="port-panel-title">Correlação</div>
+        <div id="portCorr" class="port-empty">Selecione ao menos 2 fundos</div>
       </div>
 
     </div>
@@ -571,7 +562,7 @@ function buildIbovRow() {
 function buildCdiRow() {
   return `<tr class="ibov-row">
     <td><div class="fund-name-cell">
-      <span class="rank ibov">CDI</span>
+      <span class="rank ibov" style="background:var(--green-light);color:var(--green)">CDI</span>
       <div>
         <div class="fund-name">CDI</div>
         <div class="fund-cnpj">referência · Banco Central</div>
@@ -612,10 +603,9 @@ async function load() {
       dateEl.textContent += ` · gerado ${pad(gen.getUTCDate())}/${pad(gen.getUTCMonth()+1)} às ${pad(gen.getUTCHours())}:${pad(gen.getUTCMinutes())} UTC`;
     }
 
+    if (data.ibov) ibov = data.ibov;
+    if (data.cdi)  cdi  = data.cdi;
     updateHeaders();
-    render();
-    if (data.ibov) { ibov = data.ibov; }
-    if (data.cdi)  { cdi  = data.cdi;  }
     render();
 
   } catch(e) {
@@ -647,18 +637,30 @@ function switchTab(name) {
 }
 
 // ── Portfolio ──────────────────────────────────────────────────────────────────
-let historyData = null;
+let historyData  = null;
+let fundsMap     = null;
 const PORT_COLORS = ['#e05c2a','#1a7a52','#1a4a8a','#9c5c2a','#a05c00','#b83232','#7a5c9a','#2db87a','#4d8fd4','#d4882a','#e05050','#c9960c','#557a55','#8a6a3a'];
 
+function parsePatrimonio() {
+  const raw = document.getElementById('portPatrimonio').value.replace(/\./g,'').replace(',','.');
+  return parseFloat(raw) || 0;
+}
+function onPatrimonioInput(el) { updatePortfolio(); }
+function onPatrimonioBlur(el) {
+  const v = parsePatrimonio();
+  if (v > 0) el.value = v.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+  updatePortfolio();
+}
+
 async function loadHistory() {
-  document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Carregando histórico…</div>';
+  document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Carregando hist\u00f3rico\u2026</div>';
   try {
     const res = await fetch('history.json?v=' + Date.now());
     historyData = await res.json();
     buildFundSelector();
     updatePortfolio();
   } catch(e) {
-    document.getElementById('portMetrics').innerHTML = `<div class="port-empty">Erro ao carregar history.json</div>`;
+    document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Erro ao carregar history.json</div>';
   }
 }
 
@@ -666,7 +668,6 @@ function buildFundSelector() {
   if (!historyData) return;
   const cnpjs = Object.keys(historyData.funds).sort((a,b) =>
     historyData.funds[a].nome.localeCompare(historyData.funds[b].nome));
-
   const html = cnpjs.map((cnpj, i) => {
     const nome = historyData.funds[cnpj].nome;
     return `<div class="fund-row-port">
@@ -674,7 +675,7 @@ function buildFundSelector() {
         <input type="checkbox" id="chk-${i}" data-cnpj="${cnpj}" onchange="updatePortfolio()">
         <span>${nome}</span>
       </label>
-      <div class="fund-weight-wrap" style="display:flex;align-items:center;gap:0.5rem">
+      <div style="display:flex;align-items:center;gap:0.5rem">
         <input type="range" class="fund-slider" id="sl-${i}" data-cnpj="${cnpj}"
           min="0" max="100" value="0" disabled oninput="updatePortfolio()">
         <span class="fund-weight-pct" id="wp-${i}">0%</span>
@@ -687,12 +688,20 @@ function buildFundSelector() {
 function getWeights() {
   const weights = {};
   document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
-    if (chk.checked) {
-      const sl = document.getElementById('sl-' + i);
-      weights[chk.dataset.cnpj] = parseInt(sl.value) || 0;
-    }
+    if (chk.checked) weights[chk.dataset.cnpj] = parseInt(document.getElementById('sl-' + i).value) || 0;
   });
   return weights;
+}
+
+function subtractMonthsStr(dateStr, n) {
+  const [y, m, day] = dateStr.split('-').map(Number);
+  let ny = y, nm = m - n;
+  while (nm <= 0) { nm += 12; ny--; }
+  while (nm > 12) { nm -= 12; ny++; }
+  // clamp day to last day of target month
+  const lastDay = new Date(ny, nm, 0).getDate();
+  const nd = Math.min(day, lastDay);
+  return `${ny}-${String(nm).padStart(2,'0')}-${String(nd).padStart(2,'0')}`;
 }
 
 function updatePortfolio() {
@@ -704,59 +713,79 @@ function updatePortfolio() {
     else wp.textContent = sl.value + '%';
   });
 
-  const weights = getWeights();
-  const total = Object.values(weights).reduce((a,b) => a+b, 0);
+  const weights  = getWeights();
+  const total    = Object.values(weights).reduce((a,b) => a+b, 0);
   const selected = Object.keys(weights).filter(c => weights[c] > 0);
 
-  // Barra de alocação
-  const fill = document.getElementById('portBarFill');
+  const fill  = document.getElementById('portBarFill');
   const pctEl = document.getElementById('portTotalPct');
   fill.style.width = Math.min(total, 100) + '%';
   fill.classList.toggle('over', total > 100);
-  pctEl.textContent = total + '%';
+  pctEl.textContent = total + '% alocado';
   pctEl.style.color = total > 100 ? 'var(--red)' : total === 100 ? 'var(--green)' : 'var(--muted)';
 
   if (selected.length === 0 || total === 0) {
     document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Selecione ao menos um fundo e defina os pesos</div>';
-    document.getElementById('portAlloc').innerHTML = '<div class="port-empty">—</div>';
-    document.getElementById('portCorr').innerHTML = '<div class="port-empty">—</div>';
+    document.getElementById('portCorr').innerHTML    = '<div class="port-empty">Selecione ao menos 2 fundos</div>';
     return;
   }
-
   if (!historyData) return;
-  const patrimonio = parseFloat(document.getElementById('portPatrimonio').value) || 0;
+  if (!fundsMap) fundsMap = Object.fromEntries(funds.map(f => [f.cnpjFmt, f]));
 
-  // ── Retornos diários ponderados do portfólio ──
+  const patrimonio = parsePatrimonio();
+  const wNorm = {};
+  for (const c of selected) wNorm[c] = weights[c] / total;
+
+  // Retornos diários ponderados (Float64Array para eficiência)
   const n = historyData.funds[selected[0]].returns.length;
-  const portReturns = Array.from({length: n}, (_, i) => {
-    let r = 0;
-    for (const cnpj of selected) {
-      r += historyData.funds[cnpj].returns[i] * (weights[cnpj] / total);
-    }
-    return r;
-  });
-
-  // ── CAGR ponderado (de data.json) ──
-  function weightedCagr(key) {
-    let sum = 0, w = 0;
-    for (const cnpj of selected) {
-      const fund = funds.find(f => f.cnpjFmt === cnpj);
-      if (!fund || fund[key] == null) continue;
-      sum += fund[key] * weights[cnpj];
-      w   += weights[cnpj];
-    }
-    return w > 0 ? sum / w : null;
+  const portReturns = new Float64Array(n);
+  for (const cnpj of selected) {
+    const rets = historyData.funds[cnpj].returns;
+    const w    = wNorm[cnpj];
+    for (let i = 0; i < n; i++) portReturns[i] += rets[i] * w;
   }
-  const cagr12w = weightedCagr('cagr12');
-  const cagr36w = weightedCagr('cagr36');
-  const cagr60w = weightedCagr('cagr60');
 
-  // ── Volatilidade anualizada ──
-  const mean = portReturns.reduce((a,b) => a+b, 0) / n;
+  // CAGR real da série acumulada — usa datas reais para o expoente
+  function cagrFromSlice(start, end) {
+    if (end <= start) return null;
+    let cum = 1.0;
+    for (let i = start; i < end; i++) cum *= (1 + portReturns[i]);
+    const d0 = dates[start], d1 = dates[Math.min(end, dates.length - 1)];
+    const years = (new Date(d1) - new Date(d0)) / (365.25 * 86400000);
+    return years > 0 ? (Math.pow(cum, 1 / years) - 1) * 100 : null;
+  }
+
+  const dates   = historyData.commonDates;
+  const anchor  = historyData.to;
+
+  // Janela máxima = primeira data disponível no history para o portfólio selecionado
+  // (commonDates já é a interseção de todos, mas o fundo mais jovem pode ter menos dados
+  //  do que os 3 anos completos — usar a primeira data real da série)
+  const firstDate   = dates[0];
+  const monthsAvail = (new Date(anchor) - new Date(firstDate)) / (365.25 / 12 * 86400000);
+
+  const d12 = subtractMonthsStr(anchor, 12);
+  const d36 = subtractMonthsStr(anchor, 36);
+
+  // Só calcular se a série tem dados suficientes para a janela
+  const has12 = monthsAvail >= 11; // tolerância de ~1 mês
+  const has36 = monthsAvail >= 33;
+
+  const idx12 = has12 ? dates.reduce((best, d, i) => d <= d12 ? i : best, -1) : -1;
+  const idx36 = has36 ? dates.reduce((best, d, i) => d <= d36 ? i : best, -1) : -1;
+  const cagr12w = idx12 >= 0 && idx12 < portReturns.length ? cagrFromSlice(idx12, portReturns.length) : null;
+  const cagr36w = idx36 >= 0 && idx36 < portReturns.length ? cagrFromSlice(idx36, portReturns.length) : null;
+
+  // Label da janela disponível (para mostrar ao usuário quando limitado)
+  const maxMonths = Math.floor(monthsAvail);
+  const windowNote = !has36 ? `<div style="font-family:'Courier New',monospace;font-size:0.58rem;color:var(--amber);margin-top:0.5rem;grid-column:1/-1">⚠ dados disponíveis: ${maxMonths} meses (fundo mais jovem)</div>` : '';
+
+  // Volatilidade anualizada (std dos retornos diários * sqrt(252))
+  const mean     = portReturns.reduce((a,b) => a+b, 0) / n;
   const variance = portReturns.reduce((a,r) => a + (r-mean)**2, 0) / (n-1);
-  const vol = Math.sqrt(variance) * Math.sqrt(252) * 100;
+  const vol      = Math.sqrt(variance * 252) * 100;
 
-  // ── Drawdown máximo do portfólio ──
+  // Drawdown máximo e atual da série ponderada
   let cum = 1, peak = 1, maxDD = 0;
   for (const r of portReturns) {
     cum *= (1 + r);
@@ -764,54 +793,45 @@ function updatePortfolio() {
     const dd = (cum - peak) / peak;
     if (dd < maxDD) maxDD = dd;
   }
+  const ddAtual = (cum - peak) / peak;
 
-  // ── Drawdown atual ponderado ──
-  let ddAtual = 0;
-  for (const cnpj of selected) {
-    const fund = funds.find(f => f.cnpjFmt === cnpj);
-    const dd = fund ? calcDrawdown(fund) : null;
-    if (dd !== null) ddAtual += dd * (weights[cnpj] / total);
-  }
-
-  function fmtM(v, alwaysNeg) {
+  function fmtM(v, forceNeg = false) {
     if (v === null || v === undefined || isNaN(v)) return '<span class="port-metric-val na">N/D</span>';
-    const cls = alwaysNeg ? 'neg' : v >= 0 ? 'pos' : 'neg';
-    const sign = alwaysNeg ? '' : v >= 0 ? '+' : '';
+    const cls  = forceNeg || v < 0 ? 'neg' : 'pos';
+    const sign = forceNeg ? '' : v >= 0 ? '+' : '';
     return `<span class="port-metric-val ${cls}">${sign}${v.toFixed(1)}%</span>`;
   }
 
   const brlAlocado = patrimonio * total / 100;
-  document.getElementById('portMetrics').innerHTML = `
-    <div class="port-metrics">
-      <div><div class="port-metric-label">CAGR 12M</div>${fmtM(cagr12w)}</div>
-      <div><div class="port-metric-label">CAGR 36M</div>${fmtM(cagr36w)}</div>
-      <div><div class="port-metric-label">CAGR 60M</div>${fmtM(cagr60w)}</div>
-      <div><div class="port-metric-label">Volatilidade anual</div>${fmtM(vol)}</div>
-      <div><div class="port-metric-label">Drawdown máx (3a)</div>${fmtM(maxDD * 100, true)}</div>
-      <div><div class="port-metric-label">Drawdown atual</div>${fmtM(ddAtual, true)}</div>
-      ${patrimonio > 0 ? `
-      <div style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:0.6rem;margin-top:0.2rem">
-        <div class="port-metric-label">Valor alocado</div>
-        <span class="port-metric-val" style="color:var(--text);font-size:0.95rem">R$ ${brlAlocado.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}</span>
-      </div>` : ''}
-    </div>`;
-
-  // ── Alocação ──
-  const allocHtml = selected.map((cnpj, i) => {
-    const nome = historyData.funds[cnpj].nome;
-    const pct  = weights[cnpj];
-    const brl  = patrimonio * pct / 100;
+  const allocLines = selected.map((cnpj, i) => {
+    const nome  = historyData.funds[cnpj].nome;
+    const pct   = weights[cnpj];
+    const brl   = patrimonio * pct / 100;
     const color = PORT_COLORS[i % PORT_COLORS.length];
     return `<div class="port-alloc-row">
       <span class="port-alloc-name">${nome}</span>
       <div class="port-alloc-bar-wrap"><div class="port-alloc-bar" style="width:${pct}%;background:${color}"></div></div>
       <span class="port-alloc-pct">${pct}%</span>
-      ${patrimonio > 0 ? `<span class="port-alloc-brl">R$ ${brl.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span>` : ''}
+      ${patrimonio > 0 ? `<span class="port-alloc-brl">R$\u00a0${brl.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span>` : ''}
     </div>`;
   }).join('');
-  document.getElementById('portAlloc').innerHTML = `<div class="port-alloc">${allocHtml}</div>`;
 
-  // ── Correlação ──
+  document.getElementById('portMetrics').innerHTML = `
+    <div class="port-metrics">
+      <div><div class="port-metric-label">CAGR 12M</div>${fmtM(cagr12w)}</div>
+      <div><div class="port-metric-label">CAGR 36M</div>${fmtM(cagr36w)}</div>
+      <div><div class="port-metric-label">Volatilidade anual</div>${fmtM(vol)}</div>
+      <div><div class="port-metric-label">Drawdown máx</div>${fmtM(maxDD * 100, true)}</div>
+      <div><div class="port-metric-label">Drawdown atual</div>${fmtM(ddAtual * 100, true)}</div>
+      ${patrimonio > 0 ? `<div><div class="port-metric-label">Valor alocado</div><span class="port-metric-val" style="color:var(--text);font-size:0.9rem">R$\u00a0${brlAlocado.toLocaleString('pt-BR',{maximumFractionDigits:0})}</span></div>` : '<div></div>'}
+      ${windowNote}
+    </div>
+    <div style="border-top:1px solid var(--border);margin-top:1rem;padding-top:0.9rem">
+      <div class="port-metric-label" style="margin-bottom:0.6rem">Aloca\u00e7\u00e3o</div>
+      <div class="port-alloc">${allocLines}</div>
+    </div>`;
+
+  // Correlação
   if (selected.length < 2) {
     document.getElementById('portCorr').innerHTML = '<div class="port-empty">Selecione ao menos 2 fundos</div>';
     return;
@@ -822,12 +842,12 @@ function updatePortfolio() {
   const rows  = selected.map((ca, i) =>
     `<tr><th>${names[i]}</th>` +
     selected.map((cb, j) => {
-      if (i === j) return `<td style="color:var(--muted)">—</td>`;
+      if (i === j) return `<td style="color:var(--muted)">\u2014</td>`;
       const v   = corr[ca]?.[cb] ?? 0;
       const abs = Math.abs(v);
-      const bg  = `rgba(${Math.round(abs*180)},${Math.round((1-abs)*80+80)},80,0.25)`;
-      const cls = v > 0.7 ? 'color:var(--red)' : v < 0.3 ? 'color:var(--green)' : '';
-      return `<td style="background:${bg};${cls}">${v.toFixed(2)}</td>`;
+      const bg  = `rgba(${Math.round(abs*180)},${Math.round((1-abs)*80+80)},80,0.22)`;
+      const col = abs > 0.7 ? 'var(--red)' : abs < 0.35 ? 'var(--green)' : 'var(--text)';
+      return `<td style="background:${bg};color:${col}">${v.toFixed(2)}</td>`;
     }).join('') + '</tr>'
   ).join('');
   document.getElementById('portCorr').innerHTML = `<table class="corr-table">${th}${rows}</table>`;
