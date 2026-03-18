@@ -333,8 +333,8 @@
   }
   .port-alloc-row {
     display: grid;
-    grid-template-columns: 130px 1fr 38px 90px 68px;
-    align-items: center; gap: 0.7rem;
+    grid-template-columns: 120px 1fr 36px 82px 62px 56px 56px;
+    align-items: center; gap: 0.6rem;
     margin-bottom: 0.5rem;
   }
   .port-alloc-row:last-child { margin-bottom: 0; }
@@ -359,10 +359,34 @@
   .port-alloc-target.pos { color: var(--green); }
   .port-alloc-target.neg { color: var(--red); }
   .port-alloc-target.na  { color: var(--muted); font-weight: normal; font-size: 0.65rem; }
+  .port-alloc-vol, .port-alloc-sharpe {
+    font-family: 'Courier New', monospace; font-size: 0.68rem;
+    color: var(--muted); text-align: right;
+  }
+  .port-alloc-total {
+    display: grid;
+    grid-template-columns: 120px 1fr 36px 82px 62px 56px 56px;
+    align-items: center; gap: 0.6rem;
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--border);
+  }
+  .port-alloc-total-label {
+    font-family: 'Courier New', monospace; font-size: 0.62rem;
+    font-weight: bold; color: var(--text);
+  }
+  .port-alloc-total-val {
+    font-family: 'Courier New', monospace; font-size: 0.72rem;
+    font-weight: bold; text-align: right;
+  }
+  .port-alloc-total-val.pos { color: var(--green); }
+  .port-alloc-total-val.neg { color: var(--red); }
+  .port-alloc-total-val.neu { color: var(--text); }
+  .port-alloc-total-val.muted { color: var(--muted); font-weight: normal; }
   .port-alloc-header {
     display: grid;
-    grid-template-columns: 130px 1fr 38px 90px 68px;
-    gap: 0.7rem; margin-bottom: 0.45rem;
+    grid-template-columns: 120px 1fr 36px 82px 62px 56px 56px;
+    gap: 0.6rem; margin-bottom: 0.45rem;
   }
   .port-alloc-header span {
     font-family: 'Courier New', monospace; font-size: 0.56rem;
@@ -694,7 +718,7 @@
           <div class="port-section-label">Alocação</div>
         </div>
         <div class="port-alloc-header">
-          <span>Fundo</span><span></span><span>Peso</span><span>Valor</span><span>Ret. alvo</span>
+          <span>Fundo</span><span></span><span>Peso</span><span>Valor</span><span>Ret. alvo</span><span>Vol.</span><span>Sharpe</span>
         </div>
         <div id="portAlloc"></div>
       </div>
@@ -1406,10 +1430,59 @@ function updatePortfolio() {
     </div>`;
 
   // Alocação
+  // Pre-compute vol and Sharpe for each selected fund
+  const fundVolMap    = {};
+  const fundSharpeMap = {};
+  const cdiForAlloc   = portTarget?.cdiTarget ?? 10;
+
+  for (const cnpj of selected) {
+    const fd = historyData.funds[cnpj];
+    if (!fd) continue;
+    const rets = fd.returns;
+    const n    = rets.length;
+    const mean = rets.reduce((a, b) => a + b, 0) / n;
+    const var_ = rets.reduce((a, r) => a + (r - mean) ** 2, 0) / (n - 1);
+    const volPct = Math.sqrt(var_ * 252) * 100;
+    fundVolMap[cnpj] = volPct;
+
+    const fData  = funds.find(f => f.cnpjFmt === cnpj);
+    const target = fData ? calcTargetReturn(fData) : null;
+    if (target && volPct > 0) {
+      fundSharpeMap[cnpj] = (target.value - cdiForAlloc) / volPct;
+    }
+  }
+
+  // Portfolio-level vol: σ_p = √(wᵀΣw)
+  let portVolAlloc = null;
+  if (historyData.correlation && selected.length > 1) {
+    let portVar = 0;
+    for (const ci of selected) {
+      for (const cj of selected) {
+        if (!fundVolMap[ci] || !fundVolMap[cj]) continue;
+        const rho = historyData.correlation[ci]?.[cj] ?? 0;
+        portVar  += wNorm[ci] * wNorm[cj] * fundVolMap[ci] * fundVolMap[cj] * rho;
+      }
+    }
+    portVolAlloc = Math.sqrt(Math.max(0, portVar));
+  } else if (selected.length === 1) {
+    portVolAlloc = fundVolMap[selected[0]] ?? null;
+  }
+  const portSharpeAlloc = (portVolAlloc && portVolAlloc > 0 && portTarget?.expReturn != null)
+    ? (portTarget.expReturn - cdiForAlloc) / portVolAlloc
+    : null;
+
+  const fmtVol = v => v == null
+    ? '<span class="port-alloc-vol" style="color:var(--muted)">—</span>'
+    : `<span class="port-alloc-vol">${v.toFixed(1)}%</span>`;
+  const fmtSharpeAlloc = v => v == null
+    ? '<span class="port-alloc-sharpe" style="color:var(--muted)">—</span>'
+    : `<span class="port-alloc-sharpe" style="color:${v >= 0 ? 'var(--green)' : 'var(--red)'}">${v.toFixed(2)}</span>`;
+
   const allocPanel = document.getElementById('portAllocPanel');
   if (selected.length > 0) {
     allocPanel.style.display = 'block';
-    document.getElementById('portAlloc').innerHTML = selected.map((cnpj, i) => {
+
+    const rows = selected.map((cnpj, i) => {
       const nome   = historyData.funds[cnpj].nome;
       const pct    = weights[cnpj];
       const brl    = patrimonio * pct / 100;
@@ -1425,7 +1498,6 @@ function updatePortfolio() {
         const v    = target.value;
         const cls  = v >= 0 ? 'pos' : 'neg';
         const sign = v >= 0 ? '+' : '';
-        // Tooltip: mostra os períodos usados no cálculo
         const tipLines = target.samples
           .sort((a, b) => a[0] - b[0])
           .map(([T, val]) => {
@@ -1439,14 +1511,40 @@ ${tipLines}</div>
         </div>`;
       }
 
+      const v_vol    = fundVolMap[cnpj]    ?? null;
+      const v_sharpe = fundSharpeMap[cnpj] ?? null;
+
       return `<div class="port-alloc-row">
         <span class="port-alloc-name" title="${nome}">${nome}</span>
         <div class="port-alloc-bar-wrap"><div class="port-alloc-bar" style="width:${pct}%;background:${color}"></div></div>
         <span class="port-alloc-pct">${pct}%</span>
         <span class="port-alloc-brl">${patrimonio > 0 ? 'R$\u00a0' + brl.toLocaleString('pt-BR',{maximumFractionDigits:0}) : ''}</span>
         ${targetHtml}
+        ${fmtVol(v_vol)}
+        ${fmtSharpeAlloc(v_sharpe)}
       </div>`;
     }).join('');
+
+    // Total / portfolio summary row
+    const portRetAlloc  = portTarget?.expReturn ?? null;
+    const totBrl        = patrimonio * total / 100;
+    const totalRow = `<div class="port-alloc-total">
+      <span class="port-alloc-total-label">Portfólio</span>
+      <span></span>
+      <span class="port-alloc-total-val neu">${total}%</span>
+      <span class="port-alloc-total-val neu">${patrimonio > 0 ? 'R$\u00a0' + totBrl.toLocaleString('pt-BR',{maximumFractionDigits:0}) : '—'}</span>
+      <span class="port-alloc-total-val ${portRetAlloc != null ? (portRetAlloc >= 0 ? 'pos' : 'neg') : 'muted'}">
+        ${portRetAlloc != null ? (portRetAlloc >= 0 ? '+' : '') + portRetAlloc.toFixed(1) + '%' : '—'}
+      </span>
+      <span class="port-alloc-total-val ${portVolAlloc != null ? 'neu' : 'muted'}">
+        ${portVolAlloc != null ? portVolAlloc.toFixed(1) + '%' : '—'}
+      </span>
+      <span class="port-alloc-total-val ${portSharpeAlloc != null ? (portSharpeAlloc >= 0 ? 'pos' : 'neg') : 'muted'}">
+        ${portSharpeAlloc != null ? portSharpeAlloc.toFixed(2) : '—'}
+      </span>
+    </div>`;
+
+    document.getElementById('portAlloc').innerHTML = rows + totalRow;
   } else {
     allocPanel.style.display = 'none';
   }
