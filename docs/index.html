@@ -512,6 +512,49 @@
   .ir-pill:hover .ir-custo-tip {
     opacity: 1; pointer-events: auto; transform: translateY(0);
   }
+
+  /* ── Otimizador ── */
+  .opt-bar {
+    padding: 0.7rem 1rem 0.6rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .opt-bar-label {
+    font-family: 'Courier New', monospace; font-size: 0.56rem;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); margin-bottom: 0.55rem;
+  }
+  .opt-controls {
+    display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;
+  }
+  .opt-size-group, .opt-obj-group {
+    display: flex; gap: 0.3rem;
+  }
+  .opt-divider {
+    width: 1px; background: var(--border); margin: 0 0.1rem; align-self: stretch;
+  }
+  .opt-btn {
+    font-family: 'Courier New', monospace; font-size: 0.64rem;
+    padding: 4px 9px; border-radius: 5px; cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    transition: all 0.12s; white-space: nowrap;
+  }
+  .opt-btn:hover  { border-color: var(--accent); color: var(--accent); }
+  .opt-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .opt-run {
+    font-family: 'Courier New', monospace; font-size: 0.64rem;
+    padding: 4px 12px; border-radius: 5px; cursor: pointer;
+    background: var(--accent); border: 1px solid var(--accent); color: #fff;
+    font-weight: bold; transition: opacity 0.12s; white-space: nowrap;
+    margin-left: auto;
+  }
+  .opt-run:hover    { opacity: 0.85; }
+  .opt-run:disabled { opacity: 0.4; cursor: not-allowed; }
+  .opt-status {
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    color: var(--muted); margin-top: 0.4rem; min-height: 1rem;
+  }
   @media (max-width: 900px) {
     .port-layout { grid-template-columns: 1fr; }
     .port-left { border-right: none; border-bottom: 1px solid var(--border); }
@@ -579,6 +622,24 @@
       <div class="port-bar-row">
         <div class="port-bar-track"><div class="port-bar-fill" id="portBarFill" style="width:0%"></div></div>
         <span class="port-bar-label" id="portTotalPct">0% alocado</span>
+      </div>
+      <div class="opt-bar">
+        <div class="opt-bar-label">Otimizador de carteira</div>
+        <div class="opt-controls">
+          <div class="opt-size-group">
+            <button class="opt-btn active" id="optN3"  onclick="setOptN(3)">3 fundos</button>
+            <button class="opt-btn"        id="optN5"  onclick="setOptN(5)">5 fundos</button>
+            <button class="opt-btn"        id="optN10" onclick="setOptN(10)">10 fundos</button>
+          </div>
+          <div class="opt-divider"></div>
+          <div class="opt-obj-group">
+            <button class="opt-btn active" id="optObjSharpe"  onclick="setOptObj('sharpe')">Máx. Sharpe</button>
+            <button class="opt-btn"        id="optObjReturn"  onclick="setOptObj('return')">Máx. retorno</button>
+            <button class="opt-btn"        id="optObjVol"     onclick="setOptObj('vol')">Mín. vol.</button>
+          </div>
+          <button class="opt-run" id="optRunBtn" onclick="runOptimizer()" disabled>Otimizar</button>
+        </div>
+        <div class="opt-status" id="optStatus">Aguardando dados…</div>
       </div>
       <div class="fund-selector" id="fundSelector"></div>
     </div>
@@ -1088,6 +1149,8 @@ async function loadHistory() {
     historyData = await res.json();
     buildFundSelector();
     updatePortfolio();
+    document.getElementById('optRunBtn').disabled = false;
+    document.getElementById('optStatus').textContent = 'Pronto — escolha tamanho e objetivo, depois clique Otimizar.';
   } catch(e) {
     document.getElementById('portMetrics').innerHTML = '<div class="port-empty">Erro ao carregar history.json</div>';
   }
@@ -1851,6 +1914,283 @@ document.addEventListener('mouseout', e => {
   tip.style.opacity   = '0';
   tip.style.transform = 'translateY(4px)';
 });
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// OTIMIZADOR DE CARTEIRA
+// ════════════════════════════════════════════════════════════════════════════
+
+let optN   = 3;
+let optObj = 'sharpe';
+
+function setOptN(n) {
+  optN = n;
+  ['3','5','10'].forEach(k =>
+    document.getElementById('optN' + k).classList.toggle('active', +k === n)
+  );
+}
+function setOptObj(obj) {
+  optObj = obj;
+  ['sharpe','return','vol'].forEach(k =>
+    document.getElementById('optObj' + k.charAt(0).toUpperCase() + k.slice(1))
+      .classList.toggle('active', k === obj)
+  );
+}
+
+// ── Álgebra linear básica (vetores e matrizes, sem dependências) ──────────────
+
+// Produto matriz-vetor
+function matVec(M, v) {
+  return M.map(row => row.reduce((s, x, j) => s + x * v[j], 0));
+}
+// Produto vetor-vetor (dot)
+function dot(a, b) { return a.reduce((s, x, i) => s + x * b[i], 0); }
+
+// Gauss-Jordan: inverte matriz n×n, retorna null se singular
+function invertMatrix(M) {
+  const n   = M.length;
+  const aug = M.map((row, i) => {
+    const r = [...row];
+    for (let j = 0; j < n; j++) r.push(i === j ? 1 : 0);
+    return r;
+  });
+  for (let col = 0; col < n; col++) {
+    // Pivot
+    let maxRow = col;
+    for (let row = col + 1; row < n; row++)
+      if (Math.abs(aug[row][col]) > Math.abs(aug[maxRow][col])) maxRow = row;
+    [aug[col], aug[maxRow]] = [aug[maxRow], aug[col]];
+    if (Math.abs(aug[col][col]) < 1e-12) return null;  // singular
+    const pivot = aug[col][col];
+    for (let j = 0; j < 2 * n; j++) aug[col][j] /= pivot;
+    for (let row = 0; row < n; row++) {
+      if (row === col) continue;
+      const factor = aug[row][col];
+      for (let j = 0; j < 2 * n; j++) aug[row][j] -= factor * aug[col][j];
+    }
+  }
+  return aug.map(row => row.slice(n));
+}
+
+// ── Covariância a partir de retornos diários ──────────────────────────────────
+// Retorna matriz k×k de covariâncias anualizadas (×252) em (%²)
+function covMatrix(cnpjs, historyData) {
+  const k    = cnpjs.length;
+  const rets = cnpjs.map(c => historyData.funds[c].returns);
+  const n    = rets[0].length;
+  const means = rets.map(r => r.reduce((a, b) => a + b, 0) / n);
+  const cov   = Array.from({length: k}, () => new Array(k).fill(0));
+  for (let i = 0; i < k; i++)
+    for (let j = i; j < k; j++) {
+      let s = 0;
+      for (let t = 0; t < n; t++)
+        s += (rets[i][t] - means[i]) * (rets[j][t] - means[j]);
+      cov[i][j] = cov[j][i] = (s / (n - 1)) * 252 * 10000; // (%²) anualizado
+    }
+  return cov;
+}
+
+// ── Volatilidade do portfólio dado peso w e cov ──────────────────────────────
+function portVol(w, cov) {
+  // σ² = wᵀ Σ w  (em %²) → σ em %
+  let v2 = 0;
+  for (let i = 0; i < w.length; i++)
+    for (let j = 0; j < w.length; j++)
+      v2 += w[i] * w[j] * cov[i][j];
+  return Math.sqrt(Math.max(0, v2));
+}
+
+// ── Mínima variância analítico ────────────────────────────────────────────────
+// w* = Σ⁻¹ · 1 / (1ᵀ · Σ⁻¹ · 1)
+function minVolWeights(cov) {
+  const inv = invertMatrix(cov);
+  if (!inv) return null;
+  const ones  = new Array(cov.length).fill(1);
+  const inv1  = matVec(inv, ones);
+  const denom = dot(ones, inv1);
+  if (Math.abs(denom) < 1e-12) return null;
+  const w = inv1.map(x => x / denom);
+  // Clip negatives (short-selling not allowed) and renormalise
+  const wPos  = w.map(x => Math.max(0, x));
+  const total = wPos.reduce((a, b) => a + b, 0);
+  return total > 0 ? wPos.map(x => x / total) : null;
+}
+
+// ── Máximo Sharpe (tangency portfolio) ───────────────────────────────────────
+// Solução analítica: w* = Σ⁻¹ · (μ - rf) / (1ᵀ · Σ⁻¹ · (μ - rf))
+// μ[i] = retorno alvo do fundo i (%)
+// rf    = CDI alvo (%)
+// Se pesos negativos → clip + renormalise (restrição long-only)
+function maxSharpeWeights(cnpjs, mus, cdiTarget, cov) {
+  const inv = invertMatrix(cov);
+  if (!inv) return null;
+  const excess = mus.map(m => m - cdiTarget);
+  // Se todos os excessos ≤ 0, não há portfólio com Sharpe positivo
+  if (excess.every(e => e <= 0)) return null;
+  const invExcess = matVec(inv, excess);
+  const denom     = invExcess.reduce((a, b) => a + b, 0);
+  if (Math.abs(denom) < 1e-12) return null;
+  const w    = invExcess.map(x => x / denom);
+  const wPos = w.map(x => Math.max(0, x));
+  const tot  = wPos.reduce((a, b) => a + b, 0);
+  return tot > 0 ? wPos.map(x => x / tot) : null;
+}
+
+// ── Máximo retorno: sem restrição → concentrado no fundo de maior retorno
+// Com k fundos: ordena por retorno alvo, pega top-k, otimiza Sharpe entre eles
+// (mais interessante que simplesmente alocar 100% no melhor)
+// Se não conseguir Sharpe, usa pesos uniformes
+function maxReturnWeights(mus) {
+  // Aloca mais nos fundos de maior retorno (proporcional ao excesso sobre o mínimo)
+  const minMu = Math.min(...mus);
+  const excess = mus.map(m => Math.max(0, m - minMu + 0.01));
+  const tot    = excess.reduce((a, b) => a + b, 0);
+  return excess.map(x => x / tot);
+}
+
+// ── Gera todas as combinações C(n, k) ────────────────────────────────────────
+function* combinations(arr, k) {
+  if (k === 0) { yield []; return; }
+  for (let i = 0; i <= arr.length - k; i++)
+    for (const rest of combinations(arr.slice(i + 1), k - 1))
+      yield [arr[i], ...rest];
+}
+
+// ── Avalia um portfólio (w, cnpjs) e retorna métricas ────────────────────────
+function evalPortfolio(w, cnpjs, mus, cdiTarget, cov) {
+  const ret = dot(w, mus);
+  const vol = portVol(w, cov);
+  const sharpe = vol > 0 ? (ret - cdiTarget) / vol : -Infinity;
+  return { w, cnpjs, ret, vol, sharpe };
+}
+
+// ── Aplica carteira otimizada na UI ──────────────────────────────────────────
+function applyOptimizedPortfolio(cnpjs, weights) {
+  // Desmarca todos
+  document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
+    chk.checked = false;
+    const sl = document.getElementById('sl-' + i);
+    const wi = document.getElementById('wi-' + i);
+    const row = document.getElementById('frow-' + i);
+    if (sl) { sl.value = 0; sl.disabled = true; }
+    if (wi) { wi.value = '0%'; wi.disabled = true; }
+    if (row) row.classList.add('inactive');
+  });
+
+  // Aplica novos pesos (arredonda para inteiros, redistribui resto)
+  const rounded = weights.map(w => Math.round(w * 100));
+  const diff    = 100 - rounded.reduce((a, b) => a + b, 0);
+  // Adiciona o diff ao maior peso para garantir soma = 100
+  const maxIdx  = rounded.indexOf(Math.max(...rounded));
+  rounded[maxIdx] += diff;
+
+  document.querySelectorAll('#fundSelector input[type=checkbox]').forEach((chk, i) => {
+    const idx = cnpjs.indexOf(chk.dataset.cnpj);
+    if (idx === -1) return;
+    const pct = rounded[idx];
+    if (pct <= 0) return;
+    chk.checked = true;
+    const sl = document.getElementById('sl-' + i);
+    const wi = document.getElementById('wi-' + i);
+    const row = document.getElementById('frow-' + i);
+    if (sl) { sl.value = pct; sl.disabled = false; }
+    if (wi) { wi.value = pct + '%'; wi.disabled = false; }
+    if (row) row.classList.remove('inactive');
+  });
+
+  updatePortfolio();
+}
+
+// ── Entrada principal ─────────────────────────────────────────────────────────
+function runOptimizer() {
+  if (!historyData) return;
+
+  const btn    = document.getElementById('optRunBtn');
+  const status = document.getElementById('optStatus');
+  btn.disabled = true;
+  status.textContent = 'Calculando…';
+
+  // Defer para não bloquear o render
+  setTimeout(() => {
+    try {
+      const allCnpjs = Object.keys(historyData.funds);
+      const k        = optN;
+
+      // Retornos alvo por fundo
+      const muMap = {};
+      for (const cnpj of allCnpjs) {
+        const fData = funds.find(f => f.cnpjFmt === cnpj);
+        const t     = fData ? calcTargetReturn(fData) : null;
+        muMap[cnpj] = t ? t.value : null;
+      }
+
+      // CDI alvo
+      let cdiTarget = 10;  // fallback
+      if (cdi) {
+        const s = [];
+        if (cdi.cagr12 != null) s.push([1, cdi.cagr12]);
+        if (cdi.cagr36 != null) s.push([3, cdi.cagr36]);
+        if (cdi.cagr60 != null) s.push([5, cdi.cagr60]);
+        if (s.length) cdiTarget = s.reduce((a,[T,v]) => a + T*v, 0) / s.reduce((a,[T]) => a+T, 0);
+      }
+
+      // Filtra fundos com dados completos
+      const validCnpjs = allCnpjs.filter(c => muMap[c] != null);
+
+      let best = null;
+      let nCombos = 0;
+
+      for (const combo of combinations(validCnpjs, k)) {
+        nCombos++;
+        const mus = combo.map(c => muMap[c]);
+        const cov = covMatrix(combo, historyData);
+
+        let w = null;
+        if (optObj === 'vol') {
+          w = minVolWeights(cov);
+        } else if (optObj === 'sharpe') {
+          w = maxSharpeWeights(combo, mus, cdiTarget, cov);
+          if (!w) w = minVolWeights(cov);  // fallback
+        } else {
+          // Máx. retorno: primeiro tenta Sharpe, depois proporcional
+          w = maxSharpeWeights(combo, mus, cdiTarget, cov);
+          if (!w) w = maxReturnWeights(mus);
+        }
+        if (!w) w = new Array(k).fill(1 / k);  // fallback uniforme
+
+        const p = evalPortfolio(w, combo, mus, cdiTarget, cov);
+
+        if (!best) { best = p; continue; }
+
+        const better =
+          optObj === 'vol'    ? p.vol    < best.vol    :
+          optObj === 'sharpe' ? p.sharpe > best.sharpe :
+          /* return */          p.ret    > best.ret;
+
+        if (better) best = p;
+      }
+
+      if (!best) {
+        status.textContent = 'Não foi possível otimizar.';
+        btn.disabled = false;
+        return;
+      }
+
+      const objLabel = optObj === 'vol' ? `vol. ${best.vol.toFixed(1)}%` :
+                       optObj === 'sharpe' ? `Sharpe ${best.sharpe.toFixed(2)}` :
+                       `retorno ${best.ret.toFixed(1)}%`;
+      status.textContent =
+        `${nCombos} combinações avaliadas · melhor: ${objLabel} · ` +
+        best.cnpjs.map((c,i) => `${historyData.funds[c].nome.split(' ')[0]} ${Math.round(best.w[i]*100)}%`).join(' · ');
+
+      applyOptimizedPortfolio(best.cnpjs, best.w);
+
+    } catch(e) {
+      document.getElementById('optStatus').textContent = 'Erro: ' + e.message;
+    }
+    btn.disabled = false;
+  }, 20);
+}
 
 updateHeaders();
 load();
