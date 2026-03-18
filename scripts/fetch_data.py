@@ -301,7 +301,60 @@ def process_fund(fund, anchor, prev_max_quotas):
     return result
 
 
-def fetch_ibov(anchor: datetime.date, a12: datetime.date, a36: datetime.date, a60: datetime.date):
+def fetch_cdi(anchor: datetime.date, a12: datetime.date, a36: datetime.date, a60: datetime.date):
+    """Fetch CDI daily rates from Banco Central and compute CAGRs."""
+    start = a60 - datetime.timedelta(days=10)
+    url = (f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados"
+           f"?formato=json"
+           f"&dataInicial={start.strftime('%d/%m/%Y')}"
+           f"&dataFinal={anchor.strftime('%d/%m/%Y')}")
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read())
+
+        # price_map: date -> accumulated index (starting at 1.0)
+        price_map = {}
+        acc = 1.0
+        for entry in data:
+            d = datetime.datetime.strptime(entry["data"], "%d/%m/%Y").date().isoformat()
+            acc *= (1 + float(entry["valor"]) / 100)
+            price_map[d] = acc
+
+        dates = sorted(price_map.keys())
+
+        def best_price(target: datetime.date):
+            tstr = target.isoformat()
+            candidates = [d for d in dates if d <= tstr]
+            return price_map[candidates[-1]] if candidates else None
+
+        def actual_date(target):
+            tstr = target.isoformat()
+            candidates = [d for d in dates if d <= tstr]
+            return candidates[-1] if candidates else None
+
+        p_anchor = best_price(anchor)
+        p12 = best_price(a12); p36 = best_price(a36); p60 = best_price(a60)
+        d_anchor = actual_date(anchor)
+        d12 = actual_date(a12); d36 = actual_date(a36); d60 = actual_date(a60)
+
+        def cdi_cagr(start_d, end_d, p_start, p_end):
+            if not p_start or not p_end: return None
+            yrs = (datetime.date.fromisoformat(end_d) - datetime.date.fromisoformat(start_d)).days / 365.25
+            return cagr(p_start, p_end, yrs)
+
+        result_cdi = {
+            "cagr12": cdi_cagr(d12,  d_anchor, p12,  p_anchor) if d12  else None,
+            "cagr36": cdi_cagr(d36,  d_anchor, p36,  p_anchor) if d36  else None,
+            "cagr60": cdi_cagr(d60,  d_anchor, p60,  p_anchor) if d60  else None,
+        }
+        print(f"  CDI  12M={result_cdi['cagr12']:.2f}% 36M={result_cdi['cagr36']:.2f}% 60M={result_cdi['cagr60']:.2f}%")
+        return result_cdi
+    except Exception as e:
+        print(f"  ✗ CDI fetch failed: {e}")
+        return {"cagr12": None, "cagr36": None, "cagr60": None}
+
+
     """Fetch IBOVESPA historical prices from Yahoo Finance and compute CAGRs."""
     ticker = "%5EBVSP"
     period1 = int((datetime.datetime.combine(a60 - datetime.timedelta(days=10), datetime.time()) 
@@ -558,10 +611,14 @@ def main():
     print(f"\n── Ibovespa")
     ibov = fetch_ibov(anchor, a12, a36, a60)
 
+    print(f"\n── CDI")
+    cdi = fetch_cdi(anchor, a12, a36, a60)
+
     output = {
         "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "anchorDate":  anchor.isoformat(),
         "ibov":        ibov,
+        "cdi":         cdi,
         "funds":       results,
     }
 
