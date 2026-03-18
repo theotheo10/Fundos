@@ -318,8 +318,8 @@
   }
   .port-alloc-row {
     display: grid;
-    grid-template-columns: 140px 1fr 40px 90px;
-    align-items: center; gap: 0.8rem;
+    grid-template-columns: 130px 1fr 38px 90px 68px;
+    align-items: center; gap: 0.7rem;
     margin-bottom: 0.5rem;
   }
   .port-alloc-row:last-child { margin-bottom: 0; }
@@ -336,6 +336,37 @@
   .port-alloc-brl {
     font-family: 'Courier New', monospace; font-size: 0.68rem;
     color: var(--muted); text-align: right;
+  }
+  .port-alloc-target {
+    font-family: 'Courier New', monospace; font-size: 0.72rem;
+    font-weight: bold; text-align: right;
+  }
+  .port-alloc-target.pos { color: var(--green); }
+  .port-alloc-target.neg { color: var(--red); }
+  .port-alloc-target.na  { color: var(--muted); font-weight: normal; font-size: 0.65rem; }
+  .port-alloc-header {
+    display: grid;
+    grid-template-columns: 130px 1fr 38px 90px 68px;
+    gap: 0.7rem; margin-bottom: 0.45rem;
+  }
+  .port-alloc-header span {
+    font-family: 'Courier New', monospace; font-size: 0.56rem;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); text-align: right;
+  }
+  .port-alloc-header span:first-child { text-align: left; }
+  .alloc-target-wrap { position: relative; display: inline-block; width: 100%; text-align: right; }
+  .alloc-target-wrap:hover .alloc-target-tip {
+    opacity: 1; pointer-events: auto; transform: translateY(0);
+  }
+  .alloc-target-tip {
+    position: absolute; right: 0; bottom: calc(100% + 6px);
+    background: var(--text); color: var(--bg);
+    font-family: 'Courier New', monospace; font-size: 0.58rem;
+    padding: 5px 8px; border-radius: 5px; white-space: nowrap;
+    opacity: 0; pointer-events: none;
+    transform: translateY(4px); transition: all 0.15s ease;
+    z-index: 10; line-height: 1.5;
   }
 
   /* Correlação */
@@ -431,7 +462,12 @@
         <div id="portMetrics" class="port-empty">Selecione ao menos um fundo e defina os pesos</div>
       </div>
       <div class="port-alloc-panel" id="portAllocPanel" style="display:none">
-        <div class="port-section-label" style="margin-bottom:0.7rem">Alocação</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem">
+          <div class="port-section-label">Alocação</div>
+        </div>
+        <div class="port-alloc-header">
+          <span>Fundo</span><span></span><span>Peso</span><span>Valor</span><span>Ret. alvo</span>
+        </div>
         <div id="portAlloc"></div>
       </div>
       <div class="port-corr-panel">
@@ -536,6 +572,101 @@ function cagrInception(f) {
   const years = (new Date(f.latestDate) - new Date(meta.inception)) / (365.25 * 86400000);
   if (years <= 0) return null;
   return (Math.pow(latestQuota / inceptionQuota, 1 / years) - 1) * 100;
+}
+
+// ── Retorno Alvo ──────────────────────────────────────────────────────────────
+// Metodologia: média ponderada dos CAGRs onde peso = duração do período (anos).
+// Racional: var(CAGR_T) ∝ 1/T  →  estimador de mínima variância usa pesos ∝ T.
+// Períodos mais longos têm menos ruído amostral e recebem maior credibilidade.
+// cagrInception só entra se o fundo existir há mais de 5.5 anos (evita sobreposição
+// excessiva com cagr60 e garante que a estimativa seja estruturalmente diferente).
+function calcTargetReturn(f) {
+  const samples = [];
+  // (duração em anos, valor CAGR)
+  if (f.cagr12  != null) samples.push([1.0, f.cagr12]);
+  if (f.cagr36  != null) samples.push([3.0, f.cagr36]);
+  if (f.cagr60  != null) samples.push([5.0, f.cagr60]);
+
+  const meta = FUND_META[f.cnpjFmt] || {};
+  if (meta.inception && f.latestDate) {
+    const inceptionYears = (new Date(f.latestDate) - new Date(meta.inception + 'T00:00:00')) / (365.25 * 86400000);
+    const ci = cagrInception(f);
+    if (ci != null && inceptionYears > 5.5) {
+      samples.push([inceptionYears, ci]);
+    }
+  }
+
+  if (samples.length === 0) return null;
+  const totalWeight = samples.reduce((s, [T]) => s + T, 0);
+  const weighted    = samples.reduce((s, [T, v]) => s + T * v, 0);
+  return {
+    value:   weighted / totalWeight,
+    samples: samples,  // para tooltip: [[anos, cagr], ...]
+  };
+}
+
+// Retorno alvo do portfólio: E[R_p] = Σ w_i · E[R_i]  (linear nos pesos)
+// As correlações não afetam o retorno esperado — apenas o risco.
+// Sharpe = (E[R_p] - CDI_alvo) / σ_p
+// CDI_alvo: média ponderada dos CAGRs do CDI pelos mesmos períodos (pesos 1, 3, 5)
+// σ_p = √(wᵀ Σ w) usando matriz de covariância histórica dos retornos diários
+function calcPortfolioTargetReturn(selected, wNorm, historyData) {
+  const targets = {};
+  for (const cnpj of selected) {
+    const fData = funds.find(f => f.cnpjFmt === cnpj);
+    if (!fData) continue;
+    const t = calcTargetReturn(fData);
+    if (t) targets[cnpj] = t.value;
+  }
+  if (Object.keys(targets).length === 0) return null;
+
+  // Retorno esperado ponderado do portfólio
+  let expReturn = 0;
+  for (const cnpj of selected) {
+    if (targets[cnpj] != null) expReturn += wNorm[cnpj] * targets[cnpj];
+  }
+
+  // CDI alvo: mesma metodologia dos fundos — média ponderada por período
+  // usa cagr12 (peso 1), cagr36 (peso 3), cagr60 (peso 5) do CDI global
+  let cdiTarget = null;
+  if (cdi) {
+    const cdiSamples = [];
+    if (cdi.cagr12 != null) cdiSamples.push([1, cdi.cagr12]);
+    if (cdi.cagr36 != null) cdiSamples.push([3, cdi.cagr36]);
+    if (cdi.cagr60 != null) cdiSamples.push([5, cdi.cagr60]);
+    if (cdiSamples.length > 0) {
+      const totalW = cdiSamples.reduce((s, [T]) => s + T, 0);
+      cdiTarget    = cdiSamples.reduce((s, [T, v]) => s + T * v, 0) / totalW;
+    }
+  }
+
+  // σ_p usando matriz de covariância histórica: σ_p² = Σ_i Σ_j w_i w_j σ_i σ_j ρ_{ij}
+  let portVol = null;
+  if (historyData && historyData.correlation) {
+    const vols = {};
+    for (const cnpj of selected) {
+      const fd = historyData.funds[cnpj];
+      if (!fd) continue;
+      const rets = fd.returns;
+      const n    = rets.length;
+      const mean = rets.reduce((a, b) => a + b, 0) / n;
+      const var_ = rets.reduce((a, r) => a + (r - mean) ** 2, 0) / (n - 1);
+      vols[cnpj] = Math.sqrt(var_ * 252) * 100;  // % ao ano
+    }
+    let portVar = 0;
+    for (const ci of selected) {
+      for (const cj of selected) {
+        if (!vols[ci] || !vols[cj]) continue;
+        const rho = historyData.correlation[ci]?.[cj] ?? 0;
+        portVar += wNorm[ci] * wNorm[cj] * vols[ci] * vols[cj] * rho;
+      }
+    }
+    portVol = Math.sqrt(Math.max(0, portVar));
+  }
+
+  const excess = (cdiTarget != null) ? expReturn - cdiTarget : null;
+  const sharpe = (excess != null && portVol && portVol > 0) ? excess / portVol : null;
+  return { expReturn, cdiTarget, sharpe };
 }
 
 function calcDrawdown(f) {
@@ -1002,6 +1133,15 @@ function updatePortfolio() {
 
   const brlAlocado = patrimonio * total / 100;
 
+  // Retorno alvo do portfólio
+  const portTarget = calcPortfolioTargetReturn(selected, wNorm, historyData);
+  const fmtTarget  = v => v == null
+    ? '<span class="port-metric-val na">N/D</span>'
+    : `<span class="port-metric-val ${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+  const fmtSharpe  = v => v == null
+    ? '<span class="port-metric-val na">N/D</span>'
+    : `<span class="port-metric-val neu" style="font-size:0.95rem">${v.toFixed(2)}x</span>`;
+
   // Métricas — grid 3 colunas, altura fixa
   document.getElementById('portMetrics').innerHTML = `
     <div class="port-metrics-grid">
@@ -1011,6 +1151,16 @@ function updatePortfolio() {
       <div class="port-metric"><div class="port-metric-label">Drawdown m\u00e1x</div>${fmtM(maxDD * 100, true)}</div>
       <div class="port-metric"><div class="port-metric-label">Drawdown atual</div>${fmtM(ddAtual * 100, true)}</div>
       <div class="port-metric"><div class="port-metric-label">Valor alocado</div><span class="port-metric-val neu">${patrimonio > 0 ? 'R$\u00a0' + brlAlocado.toLocaleString('pt-BR',{maximumFractionDigits:0}) : '—'}</span></div>
+      <div class="port-metric" style="border-top:1px solid var(--border);padding-top:0.65rem;margin-top:0.1rem;grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:0">
+        <div>
+          <div class="port-metric-label">★ Retorno alvo</div>
+          ${fmtTarget(portTarget?.expReturn)}
+        </div>
+        <div>
+          <div class="port-metric-label">Sharpe <span style="font-size:0.5rem;opacity:0.7">(ret. alvo − CDI) / σ</span></div>
+          ${fmtSharpe(portTarget?.sharpe)}
+        </div>
+      </div>
     </div>`;
 
   // Alocação
@@ -1018,15 +1168,40 @@ function updatePortfolio() {
   if (selected.length > 0) {
     allocPanel.style.display = 'block';
     document.getElementById('portAlloc').innerHTML = selected.map((cnpj, i) => {
-      const nome  = historyData.funds[cnpj].nome;
-      const pct   = weights[cnpj];
-      const brl   = patrimonio * pct / 100;
-      const color = PORT_COLORS[i % PORT_COLORS.length];
+      const nome   = historyData.funds[cnpj].nome;
+      const pct    = weights[cnpj];
+      const brl    = patrimonio * pct / 100;
+      const color  = PORT_COLORS[i % PORT_COLORS.length];
+
+      // Retorno alvo individual
+      const fData  = funds.find(f => f.cnpjFmt === cnpj);
+      const target = fData ? calcTargetReturn(fData) : null;
+      let targetHtml;
+      if (!target) {
+        targetHtml = `<span class="port-alloc-target na">N/D</span>`;
+      } else {
+        const v    = target.value;
+        const cls  = v >= 0 ? 'pos' : 'neg';
+        const sign = v >= 0 ? '+' : '';
+        // Tooltip: mostra os períodos usados no cálculo
+        const tipLines = target.samples
+          .sort((a, b) => a[0] - b[0])
+          .map(([T, val]) => {
+            const label = T < 1.5 ? '12M' : T < 3.5 ? '36M' : T < 5.5 ? '60M' : `${T.toFixed(0)}A`;
+            return `${label}: ${val >= 0 ? '+' : ''}${val.toFixed(1)}%`;
+          }).join('  ·  ');
+        targetHtml = `<div class="alloc-target-wrap">
+          <span class="port-alloc-target ${cls}">${sign}${v.toFixed(1)}%</span>
+          <div class="alloc-target-tip">Ret. alvo (média pond. por período)<br>${tipLines}</div>
+        </div>`;
+      }
+
       return `<div class="port-alloc-row">
         <span class="port-alloc-name" title="${nome}">${nome}</span>
         <div class="port-alloc-bar-wrap"><div class="port-alloc-bar" style="width:${pct}%;background:${color}"></div></div>
         <span class="port-alloc-pct">${pct}%</span>
         <span class="port-alloc-brl">${patrimonio > 0 ? 'R$\u00a0' + brl.toLocaleString('pt-BR',{maximumFractionDigits:0}) : ''}</span>
+        ${targetHtml}
       </div>`;
     }).join('');
   } else {
