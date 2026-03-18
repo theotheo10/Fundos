@@ -1,103 +1,114 @@
 #!/usr/bin/env python3
 """
-Fetches daily quota data from CVM.
-- Monthly files for 2021-present: /INF_DIARIO/DADOS/inf_diario_fi_YYYYMM.zip
-- Annual files for pre-2021:      /INF_DIARIO/DADOS/HIST/inf_diario_fi_YYYY.zip
-CAGR windows use fixed anchor dates shared across all funds.
+Busca dados diários de cotas da CVM e calcula métricas para o Ranking de Fundos.
+- Arquivos mensais (2021+): /INF_DIARIO/DADOS/inf_diario_fi_YYYYMM.zip
+- Arquivos anuais (pré-2021): /INF_DIARIO/DADOS/HIST/inf_diario_fi_YYYY.zip
+- IBOV: Yahoo Finance
+- CDI: API Banco Central (série 12)
 """
 
 import json, zipfile, io, math, datetime, urllib.request, calendar
 from pathlib import Path
 
+# ── Lista de fundos ────────────────────────────────────────────────────────────
 FUNDS = [
-    {"name": "Tarpon GT FIF Cotas FIA",                                             "cnpj": "22232927000190", "cnpjFmt": "22.232.927/0001-90"},
-    {"name": "Organon FIF Cotas FIA",                                               "cnpj": "17400251000166", "cnpjFmt": "17.400.251/0001-66"},
-    {"name": "Artica Long Term FIA",                                                "cnpj": "18302338000163", "cnpjFmt": "18.302.338/0001-63"},
-    {"name": "Genoa Capital Arpa CIC Classe FIM RL",                                "cnpj": "37495383000126", "cnpjFmt": "37.495.383/0001-26"},
-    {"name": "Itaú Artax Ultra Multimercado FIF DA CIC RL",                         "cnpj": "42698666000105", "cnpjFmt": "42.698.666/0001-05"},
-    {"name": "Guepardo Long Bias RV FIM",                                           "cnpj": "24623392000103", "cnpjFmt": "24.623.392/0001-03"},
-    {"name": "Kapitalo Tarkus FIF Cotas FIA",                                       "cnpj": "28747685000153", "cnpjFmt": "28.747.685/0001-53"},
-    {"name": "Real Investor FIC FIF Ações RL",                                      "cnpj": "10500884000105", "cnpjFmt": "10.500.884/0001-05"},
-    {"name": "Gama Schroder Gaia Contour Tech Equity L&S BRL FIF CIC Mult IE RL",  "cnpj": "35744790000102", "cnpjFmt": "35.744.790/0001-02"},
-    {"name": "Patria Long Biased FIF Cotas FIM",                                    "cnpj": "38954217000103", "cnpjFmt": "38.954.217/0001-03"},
-    {"name": "Absolute Pace Long Biased FIC FIF Ações RL",                         "cnpj": "32073525000143", "cnpjFmt": "32.073.525/0001-43"},
-    {"name": "Arbor FIC FIA",                                                       "cnpj": "21689246000192", "cnpjFmt": "21.689.246/0001-92"},
-    {"name": "Charles River FIF Ações",                                             "cnpj": "14438229000117", "cnpjFmt": "14.438.229/0001-17"},
-    {"name": "SPX Falcon FIF CIC Ações RL",                                         "cnpj": "17397315000117", "cnpjFmt": "17.397.315/0001-17"},
+    {"name": "Tarpon GT FIF Cotas FIA",                                            "cnpj": "22232927000190", "cnpjFmt": "22.232.927/0001-90"},
+    {"name": "Organon FIF Cotas FIA",                                              "cnpj": "17400251000166", "cnpjFmt": "17.400.251/0001-66"},
+    {"name": "Artica Long Term FIA",                                               "cnpj": "18302338000163", "cnpjFmt": "18.302.338/0001-63"},
+    {"name": "Genoa Capital Arpa CIC Classe FIM RL",                               "cnpj": "37495383000126", "cnpjFmt": "37.495.383/0001-26"},
+    {"name": "Itaú Artax Ultra Multimercado FIF DA CIC RL",                        "cnpj": "42698666000105", "cnpjFmt": "42.698.666/0001-05"},
+    {"name": "Guepardo Long Bias RV FIM",                                          "cnpj": "24623392000103", "cnpjFmt": "24.623.392/0001-03"},
+    {"name": "Kapitalo Tarkus FIF Cotas FIA",                                      "cnpj": "28747685000153", "cnpjFmt": "28.747.685/0001-53"},
+    {"name": "Real Investor FIC FIF Ações RL",                                     "cnpj": "10500884000105", "cnpjFmt": "10.500.884/0001-05"},
+    {"name": "Gama Schroder Gaia Contour Tech Equity L&S BRL FIF CIC Mult IE RL", "cnpj": "35744790000102", "cnpjFmt": "35.744.790/0001-02"},
+    {"name": "Patria Long Biased FIF Cotas FIM",                                   "cnpj": "38954217000103", "cnpjFmt": "38.954.217/0001-03"},
+    {"name": "Absolute Pace Long Biased FIC FIF Ações RL",                        "cnpj": "32073525000143", "cnpjFmt": "32.073.525/0001-43"},
+    {"name": "Arbor FIC FIA",                                                      "cnpj": "21689246000192", "cnpjFmt": "21.689.246/0001-92"},
+    {"name": "Charles River FIF Ações",                                            "cnpj": "14438229000117", "cnpjFmt": "14.438.229/0001-17"},
+    {"name": "SPX Falcon FIF CIC Ações RL",                                        "cnpj": "17397315000117", "cnpjFmt": "17.397.315/0001-17"},
 ]
 
-# Monthly cache: (year, month) -> parsed data
-# Annual cache:  year -> parsed data  (for HIST files)
-MONTHLY_CACHE = {}
-ANNUAL_CACHE  = {}
+FIRST_MONTHLY_YEAR = 2021   # CVM passou a publicar arquivos mensais a partir daqui
+CVM_OLDEST_YEAR    = 2005   # Arquivos anuais HIST disponíveis a partir daqui
 
-FIRST_MONTHLY_YEAR = 2021  # CVM monthly files start here
-CVM_OLDEST_YEAR    = 2005  # HIST annual files go back to here
+MONTHLY_CACHE: dict = {}
+ANNUAL_CACHE:  dict = {}
 
 
-def _parse_content(content):
+# ── Fetch e parse ──────────────────────────────────────────────────────────────
+
+def _parse_content(content: str) -> dict:
+    """Parseia CSV da CVM e retorna estrutura com linhas e índices de colunas."""
     lines = content.split("\n")
     header = [h.strip().lstrip("\ufeff") for h in lines[0].split(";")]
+    # Suporte aos dois formatos de coluna CNPJ da CVM
+    col_cnpj  = next((i for i, h in enumerate(header) if h.startswith("CNPJ")), -1)
     col_date  = header.index("DT_COMPTC") if "DT_COMPTC" in header else -1
     col_quota = header.index("VL_QUOTA")  if "VL_QUOTA"  in header else -1
-    return {"lines": lines, "col_date": col_date, "col_quota": col_quota}
+    return {"lines": lines, "col_cnpj": col_cnpj, "col_date": col_date, "col_quota": col_quota}
 
 
-def fetch_monthly(year, month):
+def _fetch_zip(url: str, timeout: int) -> str | None:
+    """Baixa e descomprime um ZIP da CVM, retorna o conteúdo como string."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as zf:
+            return zf.read(zf.namelist()[0]).decode("windows-1252", errors="replace")
+    except Exception as e:
+        return None
+
+
+def fetch_monthly(year: int, month: int) -> dict | None:
     key = (year, month)
     if key in MONTHLY_CACHE:
         return MONTHLY_CACHE[key]
     url = f"https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/inf_diario_fi_{year}{month:02d}.zip"
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            raw = resp.read()
-        with zipfile.ZipFile(io.BytesIO(raw)) as zf:
-            content = zf.read(zf.namelist()[0]).decode("windows-1252", errors="replace")
-        result = _parse_content(content)
-        print(f"  ✓ monthly {year}-{month:02d} ({len(result['lines'])} lines)")
-        MONTHLY_CACHE[key] = result
-        return result
-    except Exception as e:
-        print(f"  ✗ monthly {year}-{month:02d}: {e}")
-        MONTHLY_CACHE[key] = None
-        return None
+    content = _fetch_zip(url, timeout=60)
+    result = _parse_content(content) if content else None
+    if result:
+        print(f"  ✓ mensal {year}-{month:02d} ({len(result['lines'])} linhas)")
+    else:
+        print(f"  ✗ mensal {year}-{month:02d}: falhou")
+    MONTHLY_CACHE[key] = result
+    return result
 
 
-def fetch_annual(year):
+def fetch_annual(year: int) -> dict | None:
     if year in ANNUAL_CACHE:
         return ANNUAL_CACHE[year]
     url = f"https://dados.cvm.gov.br/dados/FI/DOC/INF_DIARIO/DADOS/HIST/inf_diario_fi_{year}.zip"
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            raw = resp.read()
-        with zipfile.ZipFile(io.BytesIO(raw)) as zf:
-            content = zf.read(zf.namelist()[0]).decode("windows-1252", errors="replace")
-        result = _parse_content(content)
-        print(f"  ✓ annual  {year} ({len(result['lines'])} lines)")
-        ANNUAL_CACHE[year] = result
-        return result
-    except Exception as e:
-        print(f"  ✗ annual  {year}: {e}")
-        ANNUAL_CACHE[year] = None
-        return None
+    content = _fetch_zip(url, timeout=120)
+    result = _parse_content(content) if content else None
+    if result:
+        print(f"  ✓ anual  {year} ({len(result['lines'])} linhas)")
+    else:
+        print(f"  ✗ anual  {year}: falhou")
+    ANNUAL_CACHE[year] = result
+    return result
 
 
-def _extract_rows(data, fund):
-    """Extract sorted (date, quota) rows for a fund from a parsed CSV block."""
-    if not data or data["col_date"] < 0:
+def _extract_rows(data: dict | None, fund: dict) -> list:
+    """Extrai linhas (date, quota) de um bloco CSV para um fundo específico."""
+    if not data or data["col_date"] < 0 or data["col_quota"] < 0:
         return []
     cnpj, fmt = fund["cnpj"], fund["cnpjFmt"]
     out = []
-    for line in data["lines"]:
+    for line in data["lines"][1:]:  # pula header
+        # Filtra rapidamente antes de fazer split
         if cnpj not in line and fmt not in line:
             continue
         cols = line.split(";")
         try:
+            # Valida que o CNPJ na coluna correta bate (evita falsos positivos)
+            if data["col_cnpj"] >= 0:
+                raw = cols[data["col_cnpj"]].strip().replace(".", "").replace("/", "").replace("-", "")
+                if raw != cnpj:
+                    continue
             d = cols[data["col_date"]].strip()
             q = float(cols[data["col_quota"]].replace(",", "."))
-            if d:
+            if d and q > 0:
                 out.append({"date": d, "quota": q})
         except (ValueError, IndexError):
             continue
@@ -105,131 +116,62 @@ def _extract_rows(data, fund):
     return out
 
 
-def rows_in_month(year, month, fund):
+def rows_in_month(year: int, month: int, fund: dict) -> list:
     return _extract_rows(fetch_monthly(year, month), fund)
 
 
-def rows_in_year(year, fund):
+def rows_in_year(year: int, fund: dict) -> list:
     return _extract_rows(fetch_annual(year), fund)
 
 
-def quota_on_or_before(target_date, fund):
-    """
-    Most recent quota on or before target_date.
-    Uses monthly files for 2021+, annual files for pre-2021.
-    Looks back up to 3 periods if the target period has no data.
-    """
-    ts = target_date.isoformat()
-    y, m = target_date.year, target_date.month
+# ── Datas e cálculos ───────────────────────────────────────────────────────────
 
-    # Search up to 3 months/years back
-    for _ in range(3):
-        if y >= FIRST_MONTHLY_YEAR:
-            rows = rows_in_month(y, m, fund)
-        else:
-            rows = rows_in_year(y, fund)
-
-        candidates = [r for r in rows if r["date"] <= ts]
-        if candidates:
-            return candidates[-1]
-
-        # Go back one period
-        if y >= FIRST_MONTHLY_YEAR:
-            total = y * 12 + m - 2
-            y, m = divmod(total, 12)
-            m += 1
-        else:
-            y -= 1
-
-    return None
-
-
-def subtract_months(date, n):
+def subtract_months(date: datetime.date, n: int) -> datetime.date:
+    """Subtrai N meses de uma data, clampando o dia ao último do mês alvo."""
     total = date.year * 12 + (date.month - 1) - n
-    y, m = divmod(total, 12)
-    m += 1
-    last_day = calendar.monthrange(y, m)[1]
-    return datetime.date(y, m, min(date.day, last_day))
+    y, m  = divmod(total, 12)
+    m    += 1
+    return datetime.date(y, m, min(date.day, calendar.monthrange(y, m)[1]))
 
 
-def years_apart(a, b):
+def years_apart(a: str, b: str) -> float:
     return (datetime.date.fromisoformat(b) - datetime.date.fromisoformat(a)).days / 365.25
 
 
-def cagr(start, end, years):
+def cagr(start: float, end: float, years: float) -> float | None:
     if not start or not end or years <= 0:
         return None
     return (math.pow(end / start, 1.0 / years) - 1) * 100
 
 
-def find_inception(fund, anchor_year):
-    """
-    Find oldest quota using:
-    - Annual HIST files for years before 2021
-    - Monthly files for 2021+
-    Scans December (monthly) or full year (annual) as probe,
-    then scans month-by-month / day-by-day within the oldest year found.
-    """
-    print(f"    inception search: {fund['cnpjFmt']}")
+def quota_on_or_before(target_date: datetime.date, fund: dict) -> dict | None:
+    """Retorna a cota mais recente na data alvo ou antes. Busca até 3 períodos atrás."""
+    ts = target_date.isoformat()
+    y, m = target_date.year, target_date.month
 
-    oldest_year_found = anchor_year
-    cvm_has_year = {}  # track which years exist in CVM
-
-    # Step 1: probe each year going backwards
-    for y in range(anchor_year - 1, CVM_OLDEST_YEAR - 1, -1):
+    for _ in range(3):
+        rows = rows_in_month(y, m, fund) if y >= FIRST_MONTHLY_YEAR else rows_in_year(y, fund)
+        candidates = [r for r in rows if r["date"] <= ts]
+        if candidates:
+            return candidates[-1]
+        # Retrocede um período
         if y >= FIRST_MONTHLY_YEAR:
-            rows = rows_in_month(y, 12, fund)
-            data = MONTHLY_CACHE.get((y, 12))
+            total = y * 12 + m - 2
+            y, m  = divmod(total, 12)
+            m    += 1
         else:
-            rows = rows_in_year(y, fund)
-            data = ANNUAL_CACHE.get(y)
-
-        cvm_has_year[y] = data is not None
-
-        if rows:
-            oldest_year_found = y
-            print(f"      found in {y}")
-        elif not cvm_has_year[y]:
-            # File doesn't exist — keep going (might be a gap in CVM archive)
-            pass
-        elif oldest_year_found < anchor_year:
-            # File exists but fund not in it — we've gone past inception
-            break
-
-    print(f"      oldest year: {oldest_year_found}")
-
-    # Step 2: find exact first date within oldest_year_found
-    # Also check the year before in case fund started late in prior year
-    for scan_year in [oldest_year_found - 1, oldest_year_found]:
-        if scan_year < CVM_OLDEST_YEAR:
-            continue
-        if not cvm_has_year.get(scan_year, True):
-            continue  # year has no CVM file at all
-
-        if scan_year >= FIRST_MONTHLY_YEAR:
-            # Scan month by month
-            for m in range(1, 13):
-                rows = rows_in_month(scan_year, m, fund)
-                if rows:
-                    print(f"      inception: {rows[0]['date']}")
-                    return rows[0]
-        else:
-            # Annual file — get first entry directly
-            rows = rows_in_year(scan_year, fund)
-            if rows:
-                print(f"      inception: {rows[0]['date']}")
-                return rows[0]
-
+            y -= 1
     return None
 
 
-def find_anchor_date(cur_year, cur_month):
+def find_anchor_date(cur_year: int, cur_month: int) -> datetime.date:
+    """Última data de cota disponível, usando o primeiro fundo como sonda."""
     probe = FUNDS[0]
     for delta in range(3):
         total = cur_year * 12 + cur_month - 1 - delta
-        y, m = divmod(total, 12)
-        m += 1
-        rows = rows_in_month(y, m, probe)
+        y, m  = divmod(total, 12)
+        m    += 1
+        rows  = rows_in_month(y, m, probe)
         if rows:
             anchor = datetime.date.fromisoformat(rows[-1]["date"])
             print(f"Anchor date: {anchor}")
@@ -237,16 +179,65 @@ def find_anchor_date(cur_year, cur_month):
     return datetime.date(cur_year, cur_month, 1)
 
 
-def process_fund(fund, anchor, prev_max_quotas):
+def find_inception(fund: dict, anchor_year: int) -> dict | None:
+    """
+    Busca a primeira cota disponível do fundo na CVM.
+    Para cedo ao encontrar 2 anos consecutivos com arquivo CVM mas sem o fundo.
+    """
+    print(f"    inception search: {fund['cnpjFmt']}")
+    oldest_year_found = anchor_year
+    consecutive_misses = 0
+
+    for y in range(anchor_year - 1, CVM_OLDEST_YEAR - 1, -1):
+        if y >= FIRST_MONTHLY_YEAR:
+            rows        = rows_in_month(y, 12, fund)
+            file_exists = MONTHLY_CACHE.get((y, 12)) is not None
+        else:
+            rows        = rows_in_year(y, fund)
+            file_exists = ANNUAL_CACHE.get(y) is not None
+
+        if rows:
+            oldest_year_found  = y
+            consecutive_misses = 0
+            print(f"      encontrado em {y}")
+        elif file_exists:
+            consecutive_misses += 1
+            if consecutive_misses >= 2:
+                break
+        # Arquivo não existe na CVM — pode ser gap, continua buscando
+
+    print(f"      ano mais antigo: {oldest_year_found}")
+
+    # Busca mês a mês no ano mais antigo (e no anterior por segurança)
+    for scan_year in [oldest_year_found - 1, oldest_year_found]:
+        if scan_year < CVM_OLDEST_YEAR:
+            continue
+        if scan_year >= FIRST_MONTHLY_YEAR:
+            for m in range(1, 13):
+                rows = rows_in_month(scan_year, m, fund)
+                if rows:
+                    print(f"      inception: {rows[0]['date']}")
+                    return rows[0]
+        else:
+            rows = rows_in_year(scan_year, fund)
+            if rows:
+                print(f"      inception: {rows[0]['date']}")
+                return rows[0]
+    return None
+
+
+# ── Processamento por fundo ────────────────────────────────────────────────────
+
+def process_fund(fund: dict, anchor: datetime.date, prev_max_quotas: dict) -> dict:
     print(f"\n── {fund['name']}")
 
     latest = quota_on_or_before(anchor, fund)
     if not latest:
-        print(f"  ✗ no data found")
+        print(f"  ✗ sem dados")
         return {**fund, "error": True}
 
-    print(f"  latest: {latest['quota']} on {latest['date']}")
     end_quota, end_date = latest["quota"], latest["date"]
+    print(f"  cota atual: {end_quota} em {end_date}")
 
     a12 = subtract_months(anchor, 12)
     a36 = subtract_months(anchor, 36)
@@ -266,17 +257,16 @@ def process_fund(fund, anchor, prev_max_quotas):
         yrs = years_apart(q["date"], end_date)
         return cagr(q["quota"], end_quota, yrs)
 
-    # ── Max quota: carry forward previous, update if current is higher ──
-    prev = prev_max_quotas.get(fund["cnpjFmt"], {})
-    prev_max = prev.get("maxQuota", 0) or 0
+    # Memoriza máxima histórica — nunca decresce
+    prev      = prev_max_quotas.get(fund["cnpjFmt"], {})
+    prev_max  = prev.get("maxQuota") or 0.0
     if end_quota >= prev_max:
         max_quota      = end_quota
         max_quota_date = end_date
-        print(f"  new max quota: {max_quota} on {max_quota_date}")
+        print(f"  nova máxima: {max_quota} em {max_quota_date}")
     else:
         max_quota      = prev_max
         max_quota_date = prev.get("maxQuotaDate", "")
-        print(f"  max quota unchanged: {max_quota} on {max_quota_date}")
 
     result = {
         "name":          fund["name"],
@@ -297,275 +287,212 @@ def process_fund(fund, anchor, prev_max_quotas):
         "cagrInception": cagr(inc_quota, end_quota, years_apart(inc_date, end_date)) if inc_date else None,
         "error":         False,
     }
-    print(f"  CAGR 12M={result['cagr12']}, 36M={result['cagr36']}, 60M={result['cagr60']}, inc={result['cagrInception']}")
+    print(f"  CAGR 12M={result['cagr12']:.2f if result['cagr12'] else 'N/D'} "
+          f"36M={result['cagr36']:.2f if result['cagr36'] else 'N/D'} "
+          f"60M={result['cagr60']:.2f if result['cagr60'] else 'N/D'}")
     return result
 
 
-def fetch_cdi(anchor: datetime.date, a12: datetime.date, a36: datetime.date, a60: datetime.date):
-    """Fetch CDI daily rates from Banco Central and compute CAGRs."""
+# ── Benchmarks ─────────────────────────────────────────────────────────────────
+
+def _best_price_and_date(price_map: dict, dates: list, target: datetime.date):
+    """Retorna (preço, data_str) para a data mais recente <= target."""
+    tstr       = target.isoformat()
+    candidates = [d for d in dates if d <= tstr]
+    if not candidates:
+        return None, None
+    d = candidates[-1]
+    return price_map[d], d
+
+
+def fetch_ibov(anchor: datetime.date, a12: datetime.date, a36: datetime.date, a60: datetime.date) -> dict:
+    """Busca preços do Ibovespa no Yahoo Finance e calcula CAGRs."""
+    ticker  = "%5EBVSP"
+    period1 = int(datetime.datetime.combine(
+        a60 - datetime.timedelta(days=10), datetime.time(),
+        tzinfo=datetime.timezone.utc).timestamp())
+    period2 = int(datetime.datetime.combine(
+        anchor + datetime.timedelta(days=5), datetime.time(),
+        tzinfo=datetime.timezone.utc).timestamp())
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
+           f"?interval=1d&period1={period1}&period2={period2}")
+    try:
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Mozilla/5.0", "Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read())
+
+        result     = data["chart"]["result"][0]
+        timestamps = result["timestamp"]
+        closes     = result["indicators"]["quote"][0]["close"]
+        price_map  = {
+            datetime.datetime.utcfromtimestamp(ts).date().isoformat(): price
+            for ts, price in zip(timestamps, closes) if price is not None
+        }
+        dates = sorted(price_map.keys())
+
+        p_anchor, d_anchor = _best_price_and_date(price_map, dates, anchor)
+        p12,      d12      = _best_price_and_date(price_map, dates, a12)
+        p36,      d36      = _best_price_and_date(price_map, dates, a36)
+        p60,      d60      = _best_price_and_date(price_map, dates, a60)
+
+        def ibov_cagr(d_s, d_e, p_s, p_e):
+            if not all([d_s, d_e, p_s, p_e]): return None
+            return cagr(p_s, p_e, years_apart(d_s, d_e))
+
+        result_ibov = {
+            "cagr12": ibov_cagr(d12, d_anchor, p12, p_anchor),
+            "cagr36": ibov_cagr(d36, d_anchor, p36, p_anchor),
+            "cagr60": ibov_cagr(d60, d_anchor, p60, p_anchor),
+        }
+        vals = {k: f"{v:.2f}%" if v is not None else "N/D" for k, v in result_ibov.items()}
+        print(f"  IBOV 12M={vals['cagr12']} 36M={vals['cagr36']} 60M={vals['cagr60']}")
+        return result_ibov
+    except Exception as e:
+        print(f"  ✗ IBOV falhou: {e}")
+        return {"cagr12": None, "cagr36": None, "cagr60": None}
+
+
+def fetch_cdi(anchor: datetime.date, a12: datetime.date, a36: datetime.date, a60: datetime.date) -> dict:
+    """Busca taxa CDI diária no Banco Central (série 12) e calcula CAGRs acumulados."""
+    # Busca com margem de 10 dias antes do a60 para garantir cobertura
     start = a60 - datetime.timedelta(days=10)
-    url = (f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados"
-           f"?formato=json"
-           f"&dataInicial={start.strftime('%d/%m/%Y')}"
-           f"&dataFinal={anchor.strftime('%d/%m/%Y')}")
+    url   = (f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados"
+             f"?formato=json"
+             f"&dataInicial={start.strftime('%d/%m/%Y')}"
+             f"&dataFinal={anchor.strftime('%d/%m/%Y')}")
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read())
 
-        # price_map: date -> accumulated index (starting at 1.0)
-        price_map = {}
+        if not data:
+            raise ValueError("Resposta vazia do BCB")
+
+        # Constrói índice acumulado: cada entrada é taxa diária em %
+        price_map: dict = {}
         acc = 1.0
         for entry in data:
-            d = datetime.datetime.strptime(entry["data"], "%d/%m/%Y").date().isoformat()
-            acc *= (1 + float(entry["valor"]) / 100)
+            d    = datetime.datetime.strptime(entry["data"], "%d/%m/%Y").date().isoformat()
+            acc *= 1 + float(entry["valor"]) / 100
             price_map[d] = acc
-
         dates = sorted(price_map.keys())
 
-        def best_price(target: datetime.date):
-            tstr = target.isoformat()
-            candidates = [d for d in dates if d <= tstr]
-            return price_map[candidates[-1]] if candidates else None
+        p_anchor, d_anchor = _best_price_and_date(price_map, dates, anchor)
+        p12,      d12      = _best_price_and_date(price_map, dates, a12)
+        p36,      d36      = _best_price_and_date(price_map, dates, a36)
+        p60,      d60      = _best_price_and_date(price_map, dates, a60)
 
-        def actual_date(target):
-            tstr = target.isoformat()
-            candidates = [d for d in dates if d <= tstr]
-            return candidates[-1] if candidates else None
-
-        p_anchor = best_price(anchor)
-        p12 = best_price(a12); p36 = best_price(a36); p60 = best_price(a60)
-        d_anchor = actual_date(anchor)
-        d12 = actual_date(a12); d36 = actual_date(a36); d60 = actual_date(a60)
-
-        def cdi_cagr(start_d, end_d, p_start, p_end):
-            if not p_start or not p_end: return None
-            yrs = (datetime.date.fromisoformat(end_d) - datetime.date.fromisoformat(start_d)).days / 365.25
-            return cagr(p_start, p_end, yrs)
+        def cdi_cagr(d_s, d_e, p_s, p_e):
+            if not all([d_s, d_e, p_s, p_e]): return None
+            return cagr(p_s, p_e, years_apart(d_s, d_e))
 
         result_cdi = {
-            "cagr12": cdi_cagr(d12,  d_anchor, p12,  p_anchor) if d12  else None,
-            "cagr36": cdi_cagr(d36,  d_anchor, p36,  p_anchor) if d36  else None,
-            "cagr60": cdi_cagr(d60,  d_anchor, p60,  p_anchor) if d60  else None,
+            "cagr12": cdi_cagr(d12, d_anchor, p12, p_anchor),
+            "cagr36": cdi_cagr(d36, d_anchor, p36, p_anchor),
+            "cagr60": cdi_cagr(d60, d_anchor, p60, p_anchor),
         }
-        print(f"  CDI  12M={result_cdi['cagr12']:.2f}% 36M={result_cdi['cagr36']:.2f}% 60M={result_cdi['cagr60']:.2f}%")
+        vals = {k: f"{v:.2f}%" if v is not None else "N/D" for k, v in result_cdi.items()}
+        print(f"  CDI  12M={vals['cagr12']} 36M={vals['cagr36']} 60M={vals['cagr60']}")
         return result_cdi
     except Exception as e:
-        print(f"  ✗ CDI fetch failed: {e}")
+        print(f"  ✗ CDI falhou: {e}")
         return {"cagr12": None, "cagr36": None, "cagr60": None}
 
 
-    """Fetch IBOVESPA historical prices from Yahoo Finance and compute CAGRs."""
-    ticker = "%5EBVSP"
-    period1 = int((datetime.datetime.combine(a60 - datetime.timedelta(days=10), datetime.time()) 
-                   .replace(tzinfo=datetime.timezone.utc)).timestamp())
-    period2 = int((datetime.datetime.combine(anchor + datetime.timedelta(days=5), datetime.time())
-                   .replace(tzinfo=datetime.timezone.utc)).timestamp())
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&period1={period1}&period2={period2}"
+# ── history.json ───────────────────────────────────────────────────────────────
 
-    try:
-        req = urllib.request.Request(url, headers={
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json",
-        })
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            data = json.loads(resp.read())
-
-        result  = data["chart"]["result"][0]
-        timestamps = result["timestamp"]
-        closes     = result["indicators"]["quote"][0]["close"]
-
-        price_map = {}
-        for ts, price in zip(timestamps, closes):
-            if price is not None:
-                d = datetime.datetime.utcfromtimestamp(ts).date().isoformat()
-                price_map[d] = price
-
-        dates = sorted(price_map.keys())
-
-        def best_price(target: datetime.date):
-            tstr = target.isoformat()
-            candidates = [d for d in dates if d <= tstr]
-            return price_map[candidates[-1]] if candidates else None
-
-        def ibov_cagr(start_date, end_date, p_start, p_end):
-            if not p_start or not p_end:
-                return None
-            yrs = (datetime.date.fromisoformat(end_date) - datetime.date.fromisoformat(start_date)).days / 365.25
-            return cagr(p_start, p_end, yrs)
-
-        p_anchor = best_price(anchor)
-        p12      = best_price(a12)
-        p36      = best_price(a36)
-        p60      = best_price(a60)
-
-        # Use actual dates found for precision
-        def actual_date(target):
-            tstr = target.isoformat()
-            candidates = [d for d in dates if d <= tstr]
-            return candidates[-1] if candidates else None
-
-        d_anchor = actual_date(anchor)
-        d12      = actual_date(a12)
-        d36      = actual_date(a36)
-        d60      = actual_date(a60)
-
-        result_ibov = {
-            "cagr12": ibov_cagr(d12,  d_anchor, p12,  p_anchor) if d12  else None,
-            "cagr36": ibov_cagr(d36,  d_anchor, p36,  p_anchor) if d36  else None,
-            "cagr60": ibov_cagr(d60,  d_anchor, p60,  p_anchor) if d60  else None,
-        }
-        print(f"  IBOV 12M={result_ibov['cagr12']:.2f}% 36M={result_ibov['cagr36']:.2f}% 60M={result_ibov['cagr60']:.2f}%")
-        return result_ibov
-    except Exception as e:
-        print(f"  ✗ IBOV fetch failed: {e}")
-        return {"cagr12": None, "cagr36": None, "cagr60": None}
-
-
-def update_history(anchor):
+def update_history(anchor: datetime.date) -> None:
     """
-    Atualiza o history.json com as cotas do mês atual.
-    Lê o history.json existente, busca só o mês corrente na CVM,
-    adiciona novas datas e recalcula correlações e drawdowns.
+    Atualiza history.json incrementalmente.
+    - Carrega cotas existentes
+    - Adiciona apenas datas novas dos meses atual e anterior
+    - Janela deslizante de 3 anos
+    - Recalcula retornos diários, correlação de Pearson e drawdown máximo
     """
     print(f"\n── Atualizando history.json")
     hist_path = Path(__file__).parent.parent / "docs" / "history.json"
 
-    # Carregar histórico existente ou iniciar vazio
+    # Carregar histórico existente
+    quotas: dict = {f["cnpjFmt"]: {} for f in FUNDS}
     if hist_path.exists():
         try:
             existing = json.loads(hist_path.read_text())
-            # quotas[cnpjFmt][date] = quota
-            quotas = {cnpj: dict(zip(fd["dates"], fd["quotas"]))
-                      for cnpj, fd in existing.get("funds", {}).items()}
-            print(f"  Histórico existente: {len(next(iter(quotas.values()), {}))} datas")
+            for cnpj, fd in existing.get("funds", {}).items():
+                if cnpj in quotas:
+                    quotas[cnpj] = dict(zip(fd["dates"], fd["quotas"]))
+            n_existing = len(next(iter(quotas.values()), {}))
+            print(f"  Histórico existente: {n_existing} datas")
         except Exception as e:
             print(f"  Erro ao ler history.json: {e} — iniciando do zero")
-            quotas = {f["cnpjFmt"]: {} for f in FUNDS}
-    else:
-        print("  history.json não encontrado — iniciando do zero")
-        quotas = {f["cnpjFmt"]: {} for f in FUNDS}
 
-    # Buscar mês atual (e anterior como fallback)
-    months_to_fetch = set()
-    months_to_fetch.add((anchor.year, anchor.month))
-    # também mês anterior para garantir continuidade
-    prev = anchor.replace(day=1) - datetime.timedelta(days=1)
-    months_to_fetch.add((prev.year, prev.month))
-
-    cnpj_map = {f["cnpj"]: f["cnpjFmt"] for f in FUNDS}
-    cnpj_set = set(cnpj_map.keys())
-
-    for year, month in sorted(months_to_fetch):
-        data = fetch_monthly(year, month)
-        if not data:
-            continue
+    # Adicionar mês atual e anterior (reutiliza cache do main)
+    prev_month = anchor.replace(day=1) - datetime.timedelta(days=1)
+    for year, month in sorted({(anchor.year, anchor.month), (prev_month.year, prev_month.month)}):
         added = 0
-        for line in data["lines"][1:]:
-            if not any(c in line for c in cnpj_set):
-                continue
-            cols = line.split(";")
-            try:
-                raw_cnpj = cols[data["col_date"] - 1].strip() if data["col_date"] > 0 else ""
-                # encontrar CNPJ na linha
-                found_cnpj = next((c for c in cnpj_set if c in line), None)
-                if not found_cnpj:
-                    continue
-                cnpj_fmt = cnpj_map[found_cnpj]
-                d = cols[data["col_date"]].strip()
-                q = float(cols[data["col_quota"]].replace(",", "."))
-                if d and d not in quotas.get(cnpj_fmt, {}):
-                    quotas.setdefault(cnpj_fmt, {})[d] = q
+        for fund in FUNDS:
+            for row in rows_in_month(year, month, fund):
+                d, q = row["date"], row["quota"]
+                if d not in quotas[fund["cnpjFmt"]]:
+                    quotas[fund["cnpjFmt"]][d] = q
                     added += 1
-            except (ValueError, IndexError):
-                continue
-        print(f"  {year}-{month:02d}: {added} novas cotas adicionadas")
+        print(f"  {year}-{month:02d}: {added} novas cotas")
 
-    # Janela de 3 anos a partir do anchor
-    cutoff = subtract_months(anchor, 36).isoformat()
-
-    # Datas comuns a todos os fundos dentro da janela
-    all_date_sets = [set(d for d in quotas.get(f["cnpjFmt"], {}) if d >= cutoff)
-                     for f in FUNDS]
-    common_dates = sorted(set.intersection(*all_date_sets)) if all_date_sets else []
+    # Janela deslizante de 3 anos
+    cutoff       = subtract_months(anchor, 36).isoformat()
+    date_sets    = [set(d for d in quotas[f["cnpjFmt"]] if d >= cutoff) for f in FUNDS]
+    common_dates = sorted(set.intersection(*date_sets)) if date_sets else []
 
     if not common_dates:
         print("  Sem datas comuns — history.json não atualizado")
         return
-
     print(f"  Datas comuns: {len(common_dates)} ({common_dates[0]} → {common_dates[-1]})")
 
-    # Retornos diários por fundo
-    FUND_NOMES = {
-        "22.232.927/0001-90": "Tarpon GT",
-        "17.400.251/0001-66": "Organon",
-        "18.302.338/0001-63": "Ártica Long Term",
-        "37.495.383/0001-26": "Genoa Arpa",
-        "42.698.666/0001-05": "Artax Ultra",
-        "24.623.392/0001-03": "Guepardo Long Bias",
-        "28.747.685/0001-53": "Kapitalo Tarkus",
-        "10.500.884/0001-05": "Real Investor",
-        "35.744.790/0001-02": "Schroder Tech L&S",
-        "38.954.217/0001-03": "Pátria Long Biased",
-        "32.073.525/0001-43": "Absolute Pace",
-        "21.689.246/0001-92": "Arbor",
-        "14.438.229/0001-17": "Charles River",
-        "17.397.315/0001-17": "SPX Falcon",
-    }
-
-    returns_by_fund = {}
-    for cnpj_fmt, nome in FUND_NOMES.items():
-        qs = quotas.get(cnpj_fmt, {})
+    # Retornos diários
+    returns_by_fund: dict = {}
+    for fund in FUNDS:
+        qs   = quotas[fund["cnpjFmt"]]
         rets = []
         for i in range(1, len(common_dates)):
             q0 = qs.get(common_dates[i-1])
             q1 = qs.get(common_dates[i])
-            if q0 and q1:
-                rets.append((q1 / q0) - 1)
-            else:
-                rets.append(0.0)
-        returns_by_fund[cnpj_fmt] = rets
+            rets.append((q1 / q0) - 1 if q0 and q1 else 0.0)
+        returns_by_fund[fund["cnpjFmt"]] = rets
 
     # Correlação de Pearson
-    def pearson(a, b):
+    def pearson(a: list, b: list) -> float:
         n = len(a)
-        if n < 2:
-            return 0.0
-        ma, mb = sum(a)/n, sum(b)/n
-        cov = sum((a[i]-ma)*(b[i]-mb) for i in range(n))
-        sa  = math.sqrt(sum((x-ma)**2 for x in a))
-        sb  = math.sqrt(sum((x-mb)**2 for x in b))
-        return round(cov / (sa * sb), 4) if sa * sb > 0 else 0.0
+        if n < 2: return 0.0
+        ma, mb = sum(a) / n, sum(b) / n
+        num    = sum((a[i] - ma) * (b[i] - mb) for i in range(n))
+        sa     = math.sqrt(sum((x - ma) ** 2 for x in a))
+        sb     = math.sqrt(sum((x - mb) ** 2 for x in b))
+        return round(num / (sa * sb), 4) if sa * sb > 0 else 0.0
 
-    corr = {}
-    cnpjs = list(FUND_NOMES.keys())
-    for ca in cnpjs:
-        corr[ca] = {cb: pearson(returns_by_fund[ca], returns_by_fund[cb]) for cb in cnpjs}
+    cnpjs = [f["cnpjFmt"] for f in FUNDS]
+    corr  = {ca: {cb: pearson(returns_by_fund[ca], returns_by_fund[cb]) for cb in cnpjs} for ca in cnpjs}
 
     # Drawdown máximo por fundo
-    max_drawdowns = {}
-    for cnpj_fmt, rets in returns_by_fund.items():
-        cum, peak, max_dd = 1.0, 1.0, 0.0
+    def max_dd(rets: list) -> float:
+        cum = peak = 1.0
+        dd_max = 0.0
         for r in rets:
             cum *= (1 + r)
-            if cum > peak:
-                peak = cum
+            if cum > peak: peak = cum
             dd = (cum - peak) / peak
-            if dd < max_dd:
-                max_dd = dd
-        max_drawdowns[cnpj_fmt] = round(max_dd * 100, 2)
+            if dd < dd_max: dd_max = dd
+        return round(dd_max * 100, 2)
 
-    # Montar output
-    funds_out = {}
-    for cnpj_fmt, nome in FUND_NOMES.items():
-        qs = quotas.get(cnpj_fmt, {})
-        funds_out[cnpj_fmt] = {
-            "nome":        nome,
+    funds_out = {
+        fund["cnpjFmt"]: {
+            "nome":        fund["name"],
             "dates":       common_dates,
-            "quotas":      [qs.get(d, 0) for d in common_dates],
-            "returns":     returns_by_fund[cnpj_fmt],
-            "maxDrawdown": max_drawdowns[cnpj_fmt],
+            "quotas":      [quotas[fund["cnpjFmt"]].get(d, 0.0) for d in common_dates],
+            "returns":     returns_by_fund[fund["cnpjFmt"]],
+            "maxDrawdown": max_dd(returns_by_fund[fund["cnpjFmt"]]),
         }
+        for fund in FUNDS
+    }
 
     output = {
         "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -576,35 +503,36 @@ def update_history(anchor):
         "funds":       funds_out,
     }
 
-    hist_path.write_text(json.dumps(output, ensure_ascii=False, separators=(',', ':')))
-    size_kb = hist_path.stat().st_size / 1024
-    print(f"  ✓ history.json atualizado ({size_kb:.0f} KB, {len(common_dates)} datas)")
+    hist_path.write_text(json.dumps(output, ensure_ascii=False, separators=(",", ":")))
+    print(f"  ✓ history.json atualizado ({hist_path.stat().st_size // 1024} KB, {len(common_dates)} datas)")
 
 
-def main():
+# ── Main ───────────────────────────────────────────────────────────────────────
+
+def main() -> None:
     today = datetime.date.today()
-    print(f"Running for {today.isoformat()}")
+    print(f"Executando para {today.isoformat()}")
 
     anchor = find_anchor_date(today.year, today.month)
-    a12 = subtract_months(anchor, 12)
-    a36 = subtract_months(anchor, 36)
-    a60 = subtract_months(anchor, 60)
+    a12    = subtract_months(anchor, 12)
+    a36    = subtract_months(anchor, 36)
+    a60    = subtract_months(anchor, 60)
 
-    # ── Load previous maxQuota values from existing data.json ──
-    out_path = Path(__file__).parent.parent / "docs" / "data.json"
+    # Carrega maxQuota anterior do data.json para não perder picos históricos
+    out_path        = Path(__file__).parent.parent / "docs" / "data.json"
     prev_max_quotas = {}
     if out_path.exists():
         try:
-            prev_data = json.loads(out_path.read_text())
-            for f in prev_data.get("funds", []):
+            prev = json.loads(out_path.read_text())
+            for f in prev.get("funds", []):
                 if f.get("cnpjFmt") and f.get("maxQuota"):
                     prev_max_quotas[f["cnpjFmt"]] = {
                         "maxQuota":     f["maxQuota"],
                         "maxQuotaDate": f.get("maxQuotaDate", ""),
                     }
-            print(f"Loaded {len(prev_max_quotas)} previous max quotas from data.json")
+            print(f"Carregados {len(prev_max_quotas)} maxQuotas do data.json anterior")
         except Exception as e:
-            print(f"Could not load previous data.json: {e}")
+            print(f"Não foi possível ler data.json anterior: {e}")
 
     results = [process_fund(f, anchor, prev_max_quotas) for f in FUNDS]
 
@@ -614,7 +542,7 @@ def main():
     print(f"\n── CDI")
     cdi = fetch_cdi(anchor, a12, a36, a60)
 
-    output = {
+    data_out = {
         "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "anchorDate":  anchor.isoformat(),
         "ibov":        ibov,
@@ -623,10 +551,9 @@ def main():
     }
 
     out_path.parent.mkdir(exist_ok=True)
-    out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2))
-    print(f"\n✓ Wrote {out_path} ({len(results)} funds)")
+    out_path.write_text(json.dumps(data_out, ensure_ascii=False, indent=2))
+    print(f"\n✓ data.json escrito ({len(results)} fundos)")
 
-    # ── Atualizar history.json ──
     update_history(anchor)
 
 
