@@ -339,6 +339,7 @@ function toggleTheme() {
 
 let funds        = [];
 let ibov         = { cagr12: null, cagr36: null, cagr60: null };
+let cdi          = { cagr12: null, cagr36: null, cagr60: null };
 let currentSort  = 'cagr36';
 let sortDir      = 1;
 let expandedCnpj = null;
@@ -546,6 +547,7 @@ function render() {
   });
 
   if (ibovPos === null) html += buildIbovRow();
+  html += buildCdiRow();
   document.getElementById('fundBody').innerHTML = html;
 }
 
@@ -561,6 +563,23 @@ function buildIbovRow() {
     <td>${fmtPct(ibov.cagr12)}</td>
     <td>${fmtPct(ibov.cagr36)}</td>
     <td>${fmtPct(ibov.cagr60)}</td>
+    <td><span class="cagr-val na">—</span></td>
+    <td><span class="tenure">—</span></td>
+  </tr>`;
+}
+
+function buildCdiRow() {
+  return `<tr class="ibov-row">
+    <td><div class="fund-name-cell">
+      <span class="rank ibov">CDI</span>
+      <div>
+        <div class="fund-name">CDI</div>
+        <div class="fund-cnpj">referência · Banco Central</div>
+      </div>
+    </div></td>
+    <td>${fmtPct(cdi.cagr12)}</td>
+    <td>${fmtPct(cdi.cagr36)}</td>
+    <td>${fmtPct(cdi.cagr60)}</td>
     <td><span class="cagr-val na">—</span></td>
     <td><span class="tenure">—</span></td>
   </tr>`;
@@ -595,7 +614,9 @@ async function load() {
 
     updateHeaders();
     render();
-    if (data.ibov) { ibov = data.ibov; render(); }
+    if (data.ibov) { ibov = data.ibov; }
+    if (data.cdi)  { cdi  = data.cdi;  }
+    render();
 
   } catch(e) {
     document.getElementById('statusDot').className = 'status-dot error';
